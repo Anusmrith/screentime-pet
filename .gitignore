@@ -34,3 +34,12 @@ android/local.properties
 android/**/GeneratedPluginRegistrant.java
 .gradle/
 local.properties
+
+# Non-Android platforms (Pure Android Punch-hole overlay project)
+/ios/
+/linux/
+/macos/
+/web/
+/windows/
+android/app/src/main/kotlin/com/screenpet/screen_pet/
+

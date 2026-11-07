@@ -5,62 +5,122 @@ import java.util.Calendar
 /**
  * Intelligent Sarcastic Roast & Dialogue Engine.
  *
- * Generates context-aware, witty, and humorous speech bubbles for ScreenPet
+ * Generates context-aware, witty, and humorous speech bubbles in English & Manglish
  * based on unlock frequency, time away from phone, continuous screen time,
- * and user poking interactions.
+ * morning/late-night hours, and user poking interactions.
  */
 object RoastEngine {
 
     private val POKE_ROASTS = listOf(
+        // Manglish
+        "Kuthi kalikkalle bro! 😼",
+        "Enne thodathe poi padikk 📚",
+        "Nokki irunno, ippo nadakkum 😒",
+        "Oru meen thaa aadyam 🐟",
+        "Pani edukk bro, padikk 💼",
+        "Enthada angane nokkunne? 🤨",
+        "Thodathe bro, ticklish aanu 😹",
+        // English
         "Hey, watch the whiskers! 😼",
         "Stop poking, start working! 💼",
         "Purrrrr~ 🐾",
         "I'm a camera pet, not bubble wrap!",
         "Boop! 🐱",
         "Checking screentime won't lower it 📉",
-        "Looking at me won't do your chores 🧹",
-        "You really like touching glass, huh?",
-        "Don't mind me, just judging you 👁️",
-        "Feed me a fish snack first! 🐟"
+        "Do I look like a touchscreen? 🤨",
+        "Pet tax: 1 fish please 🐟",
+        "Still here? Be productive! ⚡"
     )
 
     private val QUICK_RELOCK_ROASTS = listOf(
+        // Manglish
+        "Ippo alle veche? Appozhekkum? 😂",
+        "Onnum vannittilla bro, po 🚶",
+        "Aara message ayache? 👻",
+        "Fridgil onnum ille mone? 🥪",
+        "Veendum vannalle? Mathi! 🤦",
+        "Onnum maarittilla bro 📱",
+        // English
         "Locked 40s ago... miss me? 😏",
-        "Nothing changed in 30 seconds.",
+        "Nothing changed in 20 seconds.",
         "Phantom buzz syndrome? 📳",
         "Back already? Fridge empty? 🥪",
-        "You put me down for 10 seconds 😂",
-        "Did you forget what you unlocked for?"
-    )
-
-    private val HIGH_UNLOCK_ROASTS = listOf(
-        "Need a fidget spinner? 🌀",
-        "Your thumb is running a marathon 🏃",
-        "Checking it like the fridge again 🥶",
-        "Notification addiction detected 🚨",
-        "Your lock screen misses you already."
+        "Record speed re-opening! 🏎️",
+        "Forgot why you unlocked? 🧠",
+        "Put me down for 5 minutes ✋"
     )
 
     private val LATE_NIGHT_ROASTS = listOf(
+        // Manglish
+        "Kidann urangada mone 😴",
+        "Nale ravile enikkande? 🌙",
+        "Kallakkannu varum, urang 🐼",
+        "Phone vechittu poi kidakk 🛌",
+        "Ithano reel kaanan samayam? 💤",
+        // English
         "Go to sleep, tomorrow is real 🌙",
         "Blue light at night? Bold choice 🦉",
-        "Nothing good happens after 12 AM 😴",
-        "Go count sheep, not reels 🐑",
-        "Your pillow is lonely right now 💤"
+        "Sleep > Reels. Trust me 💤",
+        "Dark circles incoming 🐼",
+        "Tomorrow you will regret this 🥱",
+        "Close your eyes, human 🛌"
+    )
+
+    private val MORNING_ROASTS = listOf(
+        // Manglish
+        "Kannezhunnettappo phone? 🌅",
+        "Pallu thechoda aadyam? 🪥",
+        "Chaya kudy aadyam mone ☕",
+        "Ezhunnett nallapole nadakk 🚶",
+        // English
+        "First thought was your phone? 📱",
+        "Stretch before scrolling 🌅",
+        "Did you brush your teeth yet? 🪥",
+        "Good morning! Make it quick ⚡"
     )
 
     private val FOCUS_WIN_ROASTS = listOf(
-        "Over 45m focused! Proud of you ⭐",
+        // Manglish
+        "Sammathichu, nalla focus ⭐",
+        "Njan nalla urakkam aayirunnu 🐾",
+        "Ithrem neram phone illathe? 🚀",
+        "Scene mone, adipoli focus 🏆",
+        // English
+        "Over 40m focused! Proud of you ⭐",
         "I took a great nap while you worked! 🐾",
         "Productivity detected! Keep it up 🚀",
         "You survived without your phone! 🎉"
     )
 
     private val DOOMSCROLL_ROASTS = listOf(
+        // Manglish
+        "Kanninu kurach rest kodu 👀",
+        "Kannu adichu pokum bro 😵",
+        "Kannu vedanikkunnille? 🤕",
+        "Scroll cheyth mathiyayille? 📱",
+        "Purath irang swasam edu 🌱",
+        "Phone choodayi pottum 🔥",
+        "Oru reel koode? Ennitu po 🙄",
+        // English
         "Blink your eyes! 25m straight 👀",
         "Doomscroll alert! Touch grass 🌱",
-        "My paws hurt watching you scroll 🐾",
-        "Did you forget how to blink?"
+        "40m straight! Touch grass 🌳",
+        "Your phone is heating up 🔥",
+        "Just 'one more reel', right? 🙄"
+    )
+
+    private val GENERAL_GREETINGS = listOf(
+        // Manglish
+        "Vannallo! Entha karyam? 🎯",
+        "ScreenPet on duty da! 🐾",
+        "Adipoli, thudangikkoloo ⚡",
+        "Hello bro! Make it fast 🐱",
+        // English
+        "Welcome back! Make it count ⚡",
+        "ScreenPet on duty! 🐾",
+        "What's the mission this time? 🎯",
+        "Ready when you are! 🐱",
+        "Back in action! 🐾"
     )
 
     /**
@@ -74,28 +134,40 @@ object RoastEngine {
             return LATE_NIGHT_ROASTS.random()
         }
 
-        // 2. Focused study/work break (> 40 minutes away)
+        // 2. Morning check (6 AM - 9 AM)
+        if (hour in 6..9) {
+            return MORNING_ROASTS.random()
+        }
+
+        // 3. Focused study/work break (> 40 minutes away)
         if (timeSinceLastScreenOffMs > 40 * 60 * 1000L) {
             return FOCUS_WIN_ROASTS.random()
         }
 
-        // 3. Quick re-open (< 50 seconds after locking)
+        // 4. Quick re-open (< 50 seconds after locking)
         if (timeSinceLastScreenOffMs in 1..50000L) {
             return QUICK_RELOCK_ROASTS.random()
         }
 
-        // 4. High unlock frequency milestone
+        // 5. High unlock frequency milestone
         if (unlockCount >= 25 && unlockCount % 4 == 0) {
-            return "Unlock #$unlockCount! " + HIGH_UNLOCK_ROASTS.random()
+            return getHighUnlockRoast(unlockCount)
         }
 
-        // 5. Pleasant / witty check-in
+        // 6. General unlock greeting
+        return GENERAL_GREETINGS.random()
+    }
+
+    /**
+     * Generates compact high-unlock roasts with actual count.
+     */
+    private fun getHighUnlockRoast(count: Int): String {
         return listOf(
-            "Welcome back! Make it count ⚡",
-            "ScreenPet on duty! 🐾",
-            "What's the mission this time? 🎯",
-            "Ready when you are! 🐱",
-            "Back in action! 🐾"
+            "Unlock #$count! Viral theayum 🏃",
+            "Unlock #$count! Chill out 🛑",
+            "Unlock #$count! Nirthada uvve 🤦",
+            "Unlock #$count! Vellam kudy 💧",
+            "Unlock #$count! Fidget spinner? 🌀"
         ).random()
     }
 
@@ -113,4 +185,3 @@ object RoastEngine {
         return DOOMSCROLL_ROASTS.random()
     }
 }
-
