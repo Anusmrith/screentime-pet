@@ -68,6 +68,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
     private val secondTickerRunnable = object : Runnable {
         override fun run() {
+            usageTracker.checkAndResetDailyStats()
             updateStatsBadge()
             mainHandler.postDelayed(this, 1000L)
         }
@@ -702,6 +703,17 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         }
     }
 
+    /**
+     * UsageTracker.Listener callback: Midnight clock or date-changed reset.
+     * Automatically clears fatigue warnings and refreshes the badge to 0m 00s • 0 🔓 like a clock.
+     */
+    override fun onDailyReset() {
+        mainHandler.post {
+            isDoomscrollWarningShown = false
+            updateStatsBadge(force = true)
+        }
+    }
+
     private fun getDisplayWidth(): Int {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val metrics = windowManager.currentWindowMetrics
@@ -721,6 +733,10 @@ class PetOverlayService : Service(), UsageTracker.Listener {
             ACTION_UPDATE_SETTINGS -> applyCalibrationSettings()
             ACTION_SHOW_BADGE -> onPetPoked()
             ACTION_POKE_PET -> onPetPoked()
+            ACTION_RESET_STATS -> {
+                usageTracker.resetTodayStatsNow()
+                updateStatsBadge(force = true)
+            }
         }
         return START_STICKY
     }
@@ -759,6 +775,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         const val ACTION_STOP_SERVICE = "com.screenpet.app.ACTION_STOP_SERVICE"
         const val ACTION_SHOW_BADGE = "com.screenpet.app.ACTION_SHOW_BADGE"
         const val ACTION_POKE_PET = "com.screenpet.app.ACTION_POKE_PET"
+        const val ACTION_RESET_STATS = "com.screenpet.app.ACTION_RESET_STATS"
 
         const val PREFS_SETTINGS = "screen_pet_settings"
         const val KEY_SERVICE_ENABLED = "pref_service_enabled"

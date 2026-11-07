@@ -535,6 +535,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.schedule_rounded, size: 13, color: Color(0xFF6E7681)),
+                    SizedBox(width: 5),
+                    Text(
+                      'Resets daily after 12:00 AM (Midnight) like a clock',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF6E7681), fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
 
                 const SizedBox(height: 24),
 

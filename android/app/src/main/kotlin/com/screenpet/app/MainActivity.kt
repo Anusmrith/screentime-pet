@@ -140,6 +140,20 @@ class MainActivity : FlutterActivity() {
                     result.success(true)
                 }
 
+                "resetDailyStats" -> {
+                    usageTracker.resetTodayStatsNow()
+                    if (PetOverlayService.isRunning) {
+                        try {
+                            val serviceIntent = Intent(context, PetOverlayService::class.java).apply {
+                                action = PetOverlayService.ACTION_RESET_STATS
+                            }
+                            startService(serviceIntent)
+                        } catch (ignored: Exception) {
+                        }
+                    }
+                    result.success(true)
+                }
+
                 "getLastRoast" -> {
                     val prefs = context.getSharedPreferences(PetOverlayService.PREFS_SETTINGS, Context.MODE_PRIVATE)
                     val lastRoast = prefs.getString(PetOverlayService.KEY_LAST_ROAST, "ScreenPet on duty! 🐾") ?: "ScreenPet on duty! 🐾"

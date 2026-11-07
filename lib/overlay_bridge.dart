@@ -155,6 +155,18 @@ class OverlayBridge {
     }
   }
 
+  /// Manually resets today's stats back to 0 (for testing midnight clock refresh).
+  static Future<bool> resetDailyStats() async {
+    try {
+      final bool? result = await _channel.invokeMethod<bool>('resetDailyStats');
+      return result ?? false;
+    } on PlatformException catch (e) {
+      // ignore: avoid_print
+      print('OverlayBridge error resetDailyStats: ${e.message}');
+      return false;
+    }
+  }
+
   /// Retrieves the most recent roast or speech dialogue from the pet.
   static Future<String> getLastRoast() async {
     try {
