@@ -79,6 +79,8 @@ class PetOverlayService : Service(), UsageTracker.Listener {
             when (intent?.action) {
                 ACTION_UPDATE_SETTINGS -> applyCalibrationSettings()
                 ACTION_STOP_SERVICE -> stopSelf()
+                ACTION_SHOW_PET -> showOverlay()
+                ACTION_DISMISS_PET -> hideOverlay()
             }
         }
     }
@@ -99,6 +101,8 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         val filter = IntentFilter().apply {
             addAction(ACTION_UPDATE_SETTINGS)
             addAction(ACTION_STOP_SERVICE)
+            addAction(ACTION_SHOW_PET)
+            addAction(ACTION_DISMISS_PET)
         }
         ContextCompat.registerReceiver(
             this,
@@ -110,7 +114,13 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         createNotificationChannel()
         startServiceInForeground()
 
-        initOverlayView()
+        val canDraw = android.provider.Settings.canDrawOverlays(this)
+        val shouldShow = prefs.getBoolean(KEY_OVERLAY_VISIBLE, true) && canDraw
+        if (shouldShow) {
+            showOverlay()
+        } else {
+            hideOverlay()
+        }
     }
 
     private fun createNotificationChannel() {
@@ -128,7 +138,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         }
     }
 
-    private fun startServiceInForeground() {
+    private fun buildNotification(): Notification {
         val openAppIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -139,26 +149,33 @@ class PetOverlayService : Service(), UsageTracker.Listener {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val dismissIntent = Intent(this, PetOverlayService::class.java).apply {
-            action = ACTION_STOP_SERVICE
+        val toggleIntent = Intent(this, PetOverlayService::class.java).apply {
+            action = if (isOverlayVisible) ACTION_DISMISS_PET else ACTION_SHOW_PET
         }
-        val pendingDismiss = PendingIntent.getService(
+        val pendingToggle = PendingIntent.getService(
             this,
             1,
-            dismissIntent,
+            toggleIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        val title = if (isOverlayVisible) "ScreenPet Active" else "ScreenPet Habit Tracker"
+        val text = if (isOverlayVisible) "Companion floating on camera cutout" else "Tracking screen time & unlocks in background"
+        val actionText = if (isOverlayVisible) "Dismiss Pet" else "Show Pet"
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_pet)
-            .setContentTitle(getString(R.string.service_notification_title))
-            .setContentText(getString(R.string.service_notification_text))
+            .setContentTitle(title)
+            .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setContentIntent(pendingOpenApp)
-            .addAction(0, getString(R.string.action_dismiss_pet), pendingDismiss)
+            .addAction(0, actionText, pendingToggle)
             .build()
+    }
 
+    private fun startServiceInForeground() {
+        val notification = buildNotification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(
                 NOTIFICATION_ID,
@@ -167,6 +184,63 @@ class PetOverlayService : Service(), UsageTracker.Listener {
             )
         } else {
             startForeground(NOTIFICATION_ID, notification)
+        }
+    }
+
+    private fun updateNotification() {
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+        manager?.notify(NOTIFICATION_ID, buildNotification())
+    }
+
+    fun showOverlay() {
+        if (!android.provider.Settings.canDrawOverlays(this)) {
+            return
+        }
+        isOverlayVisible = true
+        prefs.edit().putBoolean(KEY_OVERLAY_VISIBLE, true).apply()
+
+        mainHandler.post {
+            if (overlayView == null) {
+                initOverlayView()
+            } else {
+                val view = overlayView ?: return@post
+                val params = windowParams ?: return@post
+                if (view.parent == null) {
+                    try {
+                        calculatePosition(params)
+                        windowManager.addView(view, params)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                view.visibility = View.VISIBLE
+                updateStatsBadge(force = true)
+                if (usageTracker.isScreenCurrentlyOn()) {
+                    startSecondTicker()
+                    startIdleBreathing()
+                }
+            }
+            updateNotification()
+        }
+    }
+
+    fun hideOverlay() {
+        isOverlayVisible = false
+        prefs.edit().putBoolean(KEY_OVERLAY_VISIBLE, false).apply()
+
+        mainHandler.post {
+            stopSecondTicker()
+            stopIdleBreathing()
+            overlayView?.let { view ->
+                if (view.parent != null) {
+                    try {
+                        windowManager.removeView(view)
+                    } catch (ignored: Exception) {
+                    }
+                }
+                view.visibility = View.GONE
+            }
+            updateNotification()
         }
     }
 
@@ -288,9 +362,11 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
         try {
             windowManager.addView(view, params)
+            isOverlayVisible = true
+            prefs.edit().putBoolean(KEY_OVERLAY_VISIBLE, true).apply()
         } catch (e: Exception) {
             e.printStackTrace()
-            stopSelf()
+            isOverlayVisible = false
             return
         }
 
@@ -678,27 +754,31 @@ class PetOverlayService : Service(), UsageTracker.Listener {
      */
     override fun onUnlock(totalScreenTimeMs: Long, unlockCount: Int, timeSinceLastScreenOffMs: Long) {
         mainHandler.post {
-            playWakeUpAnimation()
-            showRoast(RoastEngine.getUnlockRoast(unlockCount, timeSinceLastScreenOffMs))
-            startSecondTicker()
-            startIdleBreathing()
+            if (isOverlayVisible) {
+                playWakeUpAnimation()
+                showRoast(RoastEngine.getUnlockRoast(unlockCount, timeSinceLastScreenOffMs))
+                startSecondTicker()
+                startIdleBreathing()
+            }
         }
     }
 
     /**
      * UsageTracker.Listener callback: Screen on / off transitions.
-     * When screen is ON -> start 1s live ticker & idle breathing.
+     * When screen is ON -> start 1s live ticker & idle breathing (if overlay visible).
      * When screen is OFF -> stop ticker & breathing immediately for ZERO battery drain.
      */
     override fun onScreenStateChanged(isScreenOn: Boolean, totalScreenTimeMs: Long) {
         mainHandler.post {
-            if (isScreenOn) {
-                updateStatsBadge()
-                startSecondTicker()
-                startIdleBreathing()
-            } else {
-                stopSecondTicker()
-                stopIdleBreathing()
+            if (isOverlayVisible) {
+                if (isScreenOn) {
+                    updateStatsBadge()
+                    startSecondTicker()
+                    startIdleBreathing()
+                } else {
+                    stopSecondTicker()
+                    stopIdleBreathing()
+                }
             }
         }
     }
@@ -710,7 +790,9 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     override fun onDailyReset() {
         mainHandler.post {
             isDoomscrollWarningShown = false
-            updateStatsBadge(force = true)
+            if (isOverlayVisible) {
+                updateStatsBadge(force = true)
+            }
         }
     }
 
@@ -730,6 +812,8 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP_SERVICE -> stopSelf()
+            ACTION_SHOW_PET -> showOverlay()
+            ACTION_DISMISS_PET -> hideOverlay()
             ACTION_UPDATE_SETTINGS -> applyCalibrationSettings()
             ACTION_SHOW_BADGE -> onPetPoked()
             ACTION_POKE_PET -> onPetPoked()
@@ -744,6 +828,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
+        isOverlayVisible = false
         prefs.edit().putBoolean(KEY_SERVICE_ENABLED, false).apply()
         stopSecondTicker()
         stopIdleBreathing()
@@ -773,12 +858,15 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
         const val ACTION_UPDATE_SETTINGS = "com.screenpet.app.ACTION_UPDATE_SETTINGS"
         const val ACTION_STOP_SERVICE = "com.screenpet.app.ACTION_STOP_SERVICE"
+        const val ACTION_SHOW_PET = "com.screenpet.app.ACTION_SHOW_PET"
+        const val ACTION_DISMISS_PET = "com.screenpet.app.ACTION_DISMISS_PET"
         const val ACTION_SHOW_BADGE = "com.screenpet.app.ACTION_SHOW_BADGE"
         const val ACTION_POKE_PET = "com.screenpet.app.ACTION_POKE_PET"
         const val ACTION_RESET_STATS = "com.screenpet.app.ACTION_RESET_STATS"
 
         const val PREFS_SETTINGS = "screen_pet_settings"
         const val KEY_SERVICE_ENABLED = "pref_service_enabled"
+        const val KEY_OVERLAY_VISIBLE = "pref_overlay_visible"
         const val KEY_X_PERCENT = "pref_x_percent"
         const val KEY_Y_OFFSET_DP = "pref_y_dp"
         const val KEY_PET_SIZE_DP = "pref_pet_size_dp"
@@ -790,6 +878,10 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
         @Volatile
         var isRunning = false
+            private set
+
+        @Volatile
+        var isOverlayVisible = false
             private set
     }
 }

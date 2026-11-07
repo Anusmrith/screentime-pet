@@ -25,6 +25,13 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         usageTracker = UsageTracker(context)
 
+        // Always ensure background habit tracking is running 24/7
+        try {
+            val serviceIntent = Intent(context, PetOverlayService::class.java)
+            ContextCompat.startForegroundService(context, serviceIntent)
+        } catch (ignored: Exception) {
+        }
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "checkOverlayPermission" -> {
@@ -44,7 +51,9 @@ class MainActivity : FlutterActivity() {
 
                 "startOverlay" -> {
                     if (Settings.canDrawOverlays(context)) {
-                        val intent = Intent(context, PetOverlayService::class.java)
+                        val intent = Intent(context, PetOverlayService::class.java).apply {
+                            action = PetOverlayService.ACTION_SHOW_PET
+                        }
                         ContextCompat.startForegroundService(context, intent)
                         result.success(true)
                     } else {
@@ -54,14 +63,16 @@ class MainActivity : FlutterActivity() {
 
                 "stopOverlay" -> {
                     val intent = Intent(context, PetOverlayService::class.java).apply {
-                        action = PetOverlayService.ACTION_STOP_SERVICE
+                        action = PetOverlayService.ACTION_DISMISS_PET
                     }
                     startService(intent)
                     result.success(true)
                 }
 
                 "isOverlayRunning" -> {
-                    result.success(PetOverlayService.isRunning)
+                    val prefs = context.getSharedPreferences(PetOverlayService.PREFS_SETTINGS, Context.MODE_PRIVATE)
+                    val isVisible = PetOverlayService.isOverlayVisible || (PetOverlayService.isRunning && prefs.getBoolean(PetOverlayService.KEY_OVERLAY_VISIBLE, false))
+                    result.success(isVisible)
                 }
 
                 "updateCalibration" -> {

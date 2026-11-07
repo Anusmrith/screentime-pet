@@ -39,6 +39,17 @@
                 android:value="Floating screen-time status bar companion and overlay tracker" />
         </service>
 
+        <!-- Device Boot Receiver to resume habit tracking across phone reboots -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

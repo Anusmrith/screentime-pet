@@ -212,12 +212,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       decoration: BoxDecoration(
                         color: _isOverlayRunning
                             ? const Color(0xFF3FB950).withValues(alpha: 0.15)
-                            : Colors.grey.shade800.withValues(alpha: 0.3),
+                            : const Color(0xFFFF8C42).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(100),
                         border: Border.all(
                           color: _isOverlayRunning
                               ? const Color(0xFF3FB950).withValues(alpha: 0.4)
-                              : Colors.grey.shade700,
+                              : const Color(0xFFFF8C42).withValues(alpha: 0.4),
                         ),
                       ),
                       child: Row(
@@ -230,18 +230,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               shape: BoxShape.circle,
                               color: _isOverlayRunning
                                   ? const Color(0xFF3FB950)
-                                  : Colors.grey.shade500,
+                                  : const Color(0xFFFF8C42),
                             ),
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            _isOverlayRunning ? 'Active' : 'Sleeping',
+                            _isOverlayRunning ? 'Active on Notch' : 'Tracking in BG',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: _isOverlayRunning
                                   ? const Color(0xFF3FB950)
-                                  : Colors.grey.shade400,
+                                  : const Color(0xFFFF8C42),
                             ),
                           ),
                         ],
@@ -356,7 +356,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Text(
                         _isOverlayRunning
                             ? 'Floating beside your front camera. Time and unlocks update live every second.'
-                            : 'Companion is resting. Tap below to spawn it by your punch-hole.',
+                            : 'Companion is dismissed from notch, but habit tracking continues in background. Tap below to show it on camera.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 13,
