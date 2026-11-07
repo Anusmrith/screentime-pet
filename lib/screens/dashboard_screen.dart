@@ -15,28 +15,17 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen>
-    with SingleTickerProviderStateMixin {
+class _DashboardScreenState extends State<DashboardScreen> {
   bool _hasPermission = false;
   bool _isOverlayRunning = false;
   int _unlockCount = 0;
   String _screenTimeFormatted = '0m 00s';
   String _lastRoast = 'ScreenPet on duty! 🐾';
   Timer? _refreshTimer;
-  late final AnimationController _refreshAnimationController;
-  late final Animation<double> _refreshAnimation;
 
   @override
   void initState() {
     super.initState();
-    _refreshAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _refreshAnimation = CurvedAnimation(
-      parent: _refreshAnimationController,
-      curve: Curves.easeInOut,
-    );
     _refreshState();
     // Periodically update habit counters with live seconds while dashboard is in foreground
     _refreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -47,7 +36,6 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   void dispose() {
     _refreshTimer?.cancel();
-    _refreshAnimationController.dispose();
     super.dispose();
   }
 
@@ -113,37 +101,6 @@ class _DashboardScreenState extends State<DashboardScreen>
         ),
       );
     }
-  }
-
-  Future<void> _handleManualRefresh() async {
-    HapticFeedback.lightImpact();
-    _refreshAnimationController.forward(from: 0.0);
-    await _refreshState();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_rounded, color: Color(0xFF3FB950), size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Habit stats refreshed: $_screenTimeFormatted • $_unlockCount 🔓',
-                style: const TextStyle(fontSize: 13, color: Color(0xFFF0F6FC)),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF161B22),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Color(0xFF30363D)),
-        ),
-        duration: const Duration(milliseconds: 1500),
-      ),
-    );
   }
 
   Future<void> _toggleOverlay() async {
@@ -518,54 +475,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                 const SizedBox(height: 24),
 
                 // Today's Habit Statistics Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'TODAY\'S SCREEN HABITS',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: Color(0xFF6E7681),
-                      ),
-                    ),
-                    // Tactile Refresh Button with Spin Animation
-                    InkWell(
-                      onTap: _handleManualRefresh,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF8C42).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFFFF8C42).withValues(alpha: 0.4)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            RotationTransition(
-                              turns: _refreshAnimation,
-                              child: const Icon(
-                                Icons.refresh_rounded,
-                                size: 14,
-                                color: Color(0xFFFF8C42),
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            const Text(
-                              'Refresh',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Color(0xFFFF8C42),
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                const Text(
+                  'TODAY\'S SCREEN HABITS',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: Color(0xFF6E7681),
+                  ),
                 ),
                 const SizedBox(height: 12),
 
