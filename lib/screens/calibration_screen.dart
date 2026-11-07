@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../overlay_bridge.dart';
 
 class CalibrationScreen extends StatefulWidget {
@@ -41,21 +42,25 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   }
 
   void _resetToCenter() {
+    HapticFeedback.lightImpact();
     setState(() {
       _xPercent = 55.0;
       _yDp = 4;
       _sizeDp = 32;
     });
     _syncCalibration();
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Reset to standard center punch-hole defaults'),
         duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
   Future<void> _snapToCutout() async {
+    HapticFeedback.mediumImpact();
     final result = await OverlayBridge.detectCutout();
     final detected = result['detected'] as bool? ?? false;
     final targetX = (result['xPercent'] as num?)?.toDouble() ?? 52.0;
@@ -68,6 +73,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     _syncCalibration();
 
     if (!mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -76,6 +82,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
               : 'Cutout not reported; aligned to top center',
         ),
         duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -379,6 +386,50 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                           ),
                         ),
                       ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Test Poke & Animation on Status Bar
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          HapticFeedback.lightImpact();
+                          final roast = await OverlayBridge.pokePet();
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  const Text('🐾', style: TextStyle(fontSize: 16)),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      roast ?? 'Pet animated on status bar!',
+                                      style: const TextStyle(fontSize: 12, color: Color(0xFFF0F6FC)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: const Color(0xFF161B22),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.touch_app_rounded, size: 16),
+                        label: const Text('Test Pet Animation & Roast'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFFF8C42),
+                          side: const BorderSide(color: Color(0xFFFF8C42), width: 0.8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
                     ),
                   ],
                 ),

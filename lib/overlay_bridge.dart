@@ -144,14 +144,14 @@ class OverlayBridge {
   }
 
   /// Triggers a poke animation and witty roast dialogue on the floating pet.
-  static Future<bool> pokePet() async {
+  static Future<String?> pokePet() async {
     try {
-      final bool? result = await _channel.invokeMethod<bool>('pokePet');
-      return result ?? false;
+      final String? result = await _channel.invokeMethod<String>('pokePet');
+      return result;
     } on PlatformException catch (e) {
       // ignore: avoid_print
       print('OverlayBridge error pokePet: ${e.message}');
-      return false;
+      return null;
     }
   }
 

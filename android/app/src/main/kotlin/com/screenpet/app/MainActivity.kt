@@ -128,6 +128,12 @@ class MainActivity : FlutterActivity() {
                 }
 
                 "pokePet" -> {
+                    val screenTimeMs = usageTracker.getTodayScreenTimeMs()
+                    val unlocks = usageTracker.getTodayUnlockCount()
+                    val newRoast = RoastEngine.getPokeRoast(unlocks, screenTimeMs)
+                    val prefs = context.getSharedPreferences(PetOverlayService.PREFS_SETTINGS, Context.MODE_PRIVATE)
+                    prefs.edit().putString(PetOverlayService.KEY_LAST_ROAST, newRoast).apply()
+
                     if (PetOverlayService.isRunning) {
                         try {
                             val serviceIntent = Intent(context, PetOverlayService::class.java).apply {
@@ -137,11 +143,13 @@ class MainActivity : FlutterActivity() {
                         } catch (ignored: Exception) {
                         }
                     }
-                    result.success(true)
+                    result.success(newRoast)
                 }
 
                 "resetDailyStats" -> {
                     usageTracker.resetTodayStatsNow()
+                    val prefs = context.getSharedPreferences(PetOverlayService.PREFS_SETTINGS, Context.MODE_PRIVATE)
+                    prefs.edit().putString(PetOverlayService.KEY_LAST_ROAST, "Habit counters refreshed! 🐾").apply()
                     if (PetOverlayService.isRunning) {
                         try {
                             val serviceIntent = Intent(context, PetOverlayService::class.java).apply {

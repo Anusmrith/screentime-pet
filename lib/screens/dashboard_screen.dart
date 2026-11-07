@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../overlay_bridge.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -14,17 +15,28 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen>
+    with SingleTickerProviderStateMixin {
   bool _hasPermission = false;
   bool _isOverlayRunning = false;
   int _unlockCount = 0;
   String _screenTimeFormatted = '0m 00s';
   String _lastRoast = 'ScreenPet on duty! 🐾';
   Timer? _refreshTimer;
+  late final AnimationController _refreshAnimationController;
+  late final Animation<double> _refreshAnimation;
 
   @override
   void initState() {
     super.initState();
+    _refreshAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _refreshAnimation = CurvedAnimation(
+      parent: _refreshAnimationController,
+      curve: Curves.easeInOut,
+    );
     _refreshState();
     // Periodically update habit counters with live seconds while dashboard is in foreground
     _refreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -35,6 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _refreshAnimationController.dispose();
     super.dispose();
   }
 
@@ -63,17 +76,111 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _pokePet() async {
-    await OverlayBridge.pokePet();
-    await Future.delayed(const Duration(milliseconds: 250));
-    final roast = await OverlayBridge.getLastRoast();
+    HapticFeedback.lightImpact();
+    final newRoast = await OverlayBridge.pokePet();
     if (mounted) {
       setState(() {
-        _lastRoast = roast;
+        if (newRoast != null && newRoast.isNotEmpty) {
+          _lastRoast = newRoast;
+        }
       });
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Text('😼', style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _lastRoast,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFFF0F6FC),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF161B22),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Color(0xFF30363D)),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleManualRefresh() async {
+    HapticFeedback.lightImpact();
+    _refreshAnimationController.forward(from: 0.0);
+    await _refreshState();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Color(0xFF3FB950), size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Habit stats refreshed: $_screenTimeFormatted • $_unlockCount 🔓',
+                style: const TextStyle(fontSize: 13, color: Color(0xFFF0F6FC)),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF161B22),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFF30363D)),
+        ),
+        duration: const Duration(milliseconds: 1500),
+      ),
+    );
+  }
+
+  Future<void> _resetHabitStats() async {
+    HapticFeedback.mediumImpact();
+    final success = await OverlayBridge.resetDailyStats();
+    if (success) {
+      await _loadStats();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.restart_alt_rounded, color: Color(0xFFFF8C42), size: 18),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Timer and unlocks reset to 0m 00s • 0 🔓 (12:00 AM clock state)!',
+                  style: TextStyle(fontSize: 13, color: Color(0xFFF0F6FC)),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF161B22),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Color(0xFF30363D)),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
   Future<void> _toggleOverlay() async {
+    HapticFeedback.lightImpact();
     if (!_hasPermission) {
       await OverlayBridge.requestOverlayPermission();
       // Re-check after user returns from settings
@@ -84,11 +191,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (_isOverlayRunning) {
       await OverlayBridge.stopOverlay();
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Screen Pet dismissed from punch-hole.'),
+            backgroundColor: Color(0xFF161B22),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
     } else {
-      await OverlayBridge.startOverlay();
+      final success = await OverlayBridge.startOverlay();
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success
+                  ? 'Screen Pet is now floating beside your punch-hole!'
+                  : 'Could not start overlay. Please check permissions.',
+            ),
+            backgroundColor: const Color(0xFF161B22),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 300));
     await _refreshState();
   }
 
@@ -430,19 +563,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         color: Color(0xFF6E7681),
                       ),
                     ),
-                    InkWell(
-                      onTap: _loadStats,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        child: Text(
-                          'Refresh',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFFFF8C42),
-                            fontWeight: FontWeight.w600,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Quick Reset Button (Tests 12:00 AM Midnight Reset)
+                        InkWell(
+                          onTap: _resetHabitStats,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF21262D).withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFF30363D)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.restart_alt_rounded, size: 13, color: Color(0xFF8B949E)),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Reset',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Color(0xFF8B949E),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 6),
+                        // Tactile Refresh Button with Spin Animation
+                        InkWell(
+                          onTap: _handleManualRefresh,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF8C42).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFFF8C42).withValues(alpha: 0.4)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                RotationTransition(
+                                  turns: _refreshAnimation,
+                                  child: const Icon(
+                                    Icons.refresh_rounded,
+                                    size: 14,
+                                    color: Color(0xFFFF8C42),
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                const Text(
+                                  'Refresh',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Color(0xFFFF8C42),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

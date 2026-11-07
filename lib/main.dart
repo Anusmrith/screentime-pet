@@ -52,6 +52,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
   void _navigateToIndex(int index) {
+    HapticFeedback.selectionClick();
     setState(() => _currentIndex = index);
   }
 

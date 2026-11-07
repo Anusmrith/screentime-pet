@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/pet_skin.dart';
 
 class WardrobeScreen extends StatefulWidget {
@@ -84,12 +85,15 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () {
+                      HapticFeedback.lightImpact();
                       setState(() => _selectedSkinId = skin.id);
                       Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).clearSnackBars();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('${skin.name} is now active on your notch!'),
                           duration: const Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
                         ),
                       );
                     },
@@ -109,7 +113,9 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () {
+                      HapticFeedback.lightImpact();
                       Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).clearSnackBars();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
