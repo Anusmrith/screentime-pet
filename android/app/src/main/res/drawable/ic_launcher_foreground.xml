@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Center punch hole camera ring -->
+    <path
+        android:fillColor="#000000"
+        android:strokeColor="#FF8C42"
+        android:strokeWidth="2"
+        android:pathData="M54,26m-8,0a8,8 0,1,1 16,0a8,8 0,1,1 -16,0" />
+    <path
+        android:fillColor="#FF8C42"
+        android:pathData="M54,26m-4,0a4,4 0,1,1 8,0a4,4 0,1,1 -8,0" />
+    <!-- Cat face silhouette -->
+    <path
+        android:fillColor="#FF8C42"
+        android:pathData="M38,50 L42,38 L50,45 L58,45 L66,38 L70,50 C74,58 74,68 70,76 C66,82 42,82 38,76 C34,68 34,58 38,50 Z" />
+    <!-- Cute ears inner -->
+    <path
+        android:fillColor="#FFA96B"
+        android:pathData="M43,44 L44,40 L48,44 Z M60,44 L64,40 L65,44 Z" />
+    <!-- Eyes -->
+    <path
+        android:fillColor="#161B22"
+        android:pathData="M44,58 L50,58 L50,60 L44,60 Z M58,58 L64,58 L64,60 L58,60 Z" />
+    <!-- Nose -->
+    <path
+        android:fillColor="#161B22"
+        android:pathData="M52,65 L56,65 L54,67 Z" />
+</vector>
+

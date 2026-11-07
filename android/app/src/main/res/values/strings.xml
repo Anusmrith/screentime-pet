@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">ScreenPet</string>
+    <string name="app_tagline">Punch-Hole Digital Habit Companion</string>
+
+    <!-- Overlay & Service Notifications -->
+    <string name="service_channel_name">ScreenPet Companion Service</string>
+    <string name="service_channel_desc">Keeps your punch-hole pet companion active and tracks screen habits</string>
+    <string name="service_notification_title">ScreenPet is watching over your screen</string>
+    <string name="service_notification_text">Tap to configure position and habits</string>
+    <string name="action_dismiss_pet">Dismiss Pet</string>
+    <string name="action_open_settings">Settings</string>
+
+    <!-- UI State & Buttons -->
+    <string name="status_active">Active • Sitting by Notch</string>
+    <string name="status_inactive">Sleeping • Service Off</string>
+    <string name="btn_spawn_pet">Spawn Screen Pet</string>
+    <string name="btn_dismiss_pet">Dismiss Screen Pet</string>
+    <string name="btn_reset_defaults">Reset to Center Punch-Hole</string>
+    <string name="btn_snap_cutout">Snap to Detected Camera</string>
+    <string name="btn_grant_permission">Grant Overlay Access</string>
+
+    <!-- Permission Banner -->
+    <string name="permission_banner_title">Display Over Other Apps Required</string>
+    <string name="permission_banner_desc">ScreenPet needs system overlay permission to display seamlessly next to your front camera cutout across all apps.</string>
+
+    <!-- Calibration Section -->
+    <string name="section_calibration">Punch-Hole Calibration</string>
+    <string name="calibration_desc">Fine-tune the pet position and size so it sits flush beside your front camera punch-hole.</string>
+    <string name="label_x_pos">Horizontal Position (X %):</string>
+    <string name="label_y_offset">Vertical Offset (Y dp):</string>
+    <string name="label_pet_size">Pet Size:</string>
+
+    <!-- Habit Stats Section -->
+    <string name="section_stats">Today\'s Screen Habits</string>
+    <string name="stats_screen_time_title">Screen-On Time</string>
+    <string name="stats_screen_time_desc">Active usage today</string>
+    <string name="stats_unlocks_title">Unlocks</string>
+    <string name="stats_unlocks_desc">Times phone unlocked</string>
+    <string name="wellness_tip">ScreenPet expands subtly when you unlock or tap it, keeping you mindful without disrupting your workflow.</string>
+    
+    <!-- Badges & Formatters -->
+    <string name="stats_badge_format">%1$s • %2$d 🔓</string>
+    <string name="format_hours_mins">%1$dh %2$02dm</string>
+    <string name="format_mins_only">%1$dm</string>
+    <string name="format_secs_only">%1$ds</string>
+    <string name="format_unlocks">%1$d unlocks</string>
+</resources>
+

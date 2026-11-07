@@ -1,0 +1,778 @@
+package com.screenpet.app
+
+import android.animation.ValueAnimator
+import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.SharedPreferences
+import android.content.pm.ServiceInfo
+import android.graphics.PixelFormat
+import android.graphics.Rect
+import android.os.Build
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
+import android.util.DisplayMetrics
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewConfiguration
+import android.view.ViewGroup
+import android.view.WindowManager
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.OvershootInterpolator
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
+import kotlin.math.abs
+
+/**
+ * Floating Punch-Hole Overlay Service.
+ *
+ * Runs as an optimized ForegroundService that draws a floating minimalist companion view
+ * using WindowManager and TYPE_APPLICATION_OVERLAY. Configured with LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS,
+ * FLAG_LAYOUT_NO_LIMITS, and FLAG_NOT_FOCUSABLE so that it renders right up against the display
+ * cutout inside the status bar area without letterboxing.
+ */
+class PetOverlayService : Service(), UsageTracker.Listener {
+
+    private lateinit var windowManager: WindowManager
+    private var overlayView: View? = null
+    private var windowParams: WindowManager.LayoutParams? = null
+
+    private lateinit var ivPet: ImageView
+    private lateinit var layoutStatsBadge: LinearLayout
+    private lateinit var tvStatsBadgeText: TextView
+    private lateinit var rootContainer: LinearLayout
+
+    private lateinit var usageTracker: UsageTracker
+    private lateinit var prefs: SharedPreferences
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var isTickerRunning = false
+    private var activeRoastUntilMs = 0L
+    private var isCustomAnimating = false
+    private var idleAnimator: ValueAnimator? = null
+    private var isDoomscrollWarningShown = false
+
+    private val secondTickerRunnable = object : Runnable {
+        override fun run() {
+            updateStatsBadge()
+            mainHandler.postDelayed(this, 1000L)
+        }
+    }
+
+    private val settingsReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                ACTION_UPDATE_SETTINGS -> applyCalibrationSettings()
+                ACTION_STOP_SERVICE -> stopSelf()
+            }
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        setTheme(R.style.Theme_ScreenPet)
+        isRunning = true
+        prefs = getSharedPreferences(PREFS_SETTINGS, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_SERVICE_ENABLED, true).apply()
+
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+
+        usageTracker = UsageTracker(this)
+        usageTracker.setListener(this)
+        usageTracker.startTracking()
+
+        val filter = IntentFilter().apply {
+            addAction(ACTION_UPDATE_SETTINGS)
+            addAction(ACTION_STOP_SERVICE)
+        }
+        ContextCompat.registerReceiver(
+            this,
+            settingsReceiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
+        createNotificationChannel()
+        startServiceInForeground()
+
+        initOverlayView()
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                getString(R.string.service_channel_name),
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = getString(R.string.service_channel_desc)
+                setShowBadge(false)
+            }
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannel(channel)
+        }
+    }
+
+    private fun startServiceInForeground() {
+        val openAppIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingOpenApp = PendingIntent.getActivity(
+            this,
+            0,
+            openAppIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val dismissIntent = Intent(this, PetOverlayService::class.java).apply {
+            action = ACTION_STOP_SERVICE
+        }
+        val pendingDismiss = PendingIntent.getService(
+            this,
+            1,
+            dismissIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_pet)
+            .setContentTitle(getString(R.string.service_notification_title))
+            .setContentText(getString(R.string.service_notification_text))
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .setContentIntent(pendingOpenApp)
+            .addAction(0, getString(R.string.action_dismiss_pet), pendingDismiss)
+            .build()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun initOverlayView() {
+        val themedContext = android.view.ContextThemeWrapper(this, R.style.Theme_ScreenPet)
+        val inflater = LayoutInflater.from(themedContext)
+        overlayView = inflater.inflate(R.layout.layout_pet_overlay, null)
+
+        val view = overlayView ?: return
+        rootContainer = view.findViewById(R.id.rootOverlayContainer)
+        ivPet = view.findViewById(R.id.ivPetOverlay)
+        layoutStatsBadge = view.findViewById(R.id.layoutStatsBadge)
+        tvStatsBadgeText = view.findViewById(R.id.tvStatsBadgeText)
+
+        // Always visible badge; tapping badge triggers poke or dismisses active roast
+        layoutStatsBadge.setOnClickListener {
+            if (activeRoastUntilMs > System.currentTimeMillis()) {
+                dismissRoast()
+            } else {
+                onPetPoked()
+            }
+        }
+
+        // Interactive touch dragging & tap listener on pet
+        var initialX = 0
+        var initialY = 0
+        var initialTouchX = 0f
+        var initialTouchY = 0f
+        var isDragging = false
+        val touchSlop = ViewConfiguration.get(this).scaledTouchSlop
+
+        ivPet.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    initialX = windowParams?.x ?: 0
+                    initialY = windowParams?.y ?: 0
+                    initialTouchX = event.rawX
+                    initialTouchY = event.rawY
+                    isDragging = false
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = event.rawX - initialTouchX
+                    val dy = event.rawY - initialTouchY
+                    if (!isDragging && (abs(dx) > touchSlop || abs(dy) > touchSlop)) {
+                        isDragging = true
+                    }
+                    if (isDragging) {
+                        windowParams?.let { params ->
+                            val screenW = getDisplayWidth()
+                            val viewW = overlayView?.width ?: 0
+
+                            params.x = (initialX + dx.toInt()).coerceIn(0, (screenW - viewW).coerceAtLeast(0))
+                            params.y = (initialY + dy.toInt()).coerceAtLeast(0)
+                            try {
+                                windowManager.updateViewLayout(overlayView, params)
+                            } catch (ignored: Exception) {
+                            }
+                        }
+                    }
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    if (isDragging) {
+                        windowParams?.let { params ->
+                            val screenW = getDisplayWidth()
+                            val density = resources.displayMetrics.density
+                            val petSizeDp = prefs.getInt(KEY_PET_SIZE_DP, DEFAULT_PET_SIZE_DP)
+                            val petSizePx = (petSizeDp * density).toInt()
+
+                            val newXPercent = ((params.x + petSizePx / 2f) / screenW * 100f).coerceIn(0f, 100f)
+                            val newYDp = (params.y / density).toInt().coerceIn(0, 80)
+
+                            prefs.edit()
+                                .putFloat(KEY_X_PERCENT, newXPercent)
+                                .putInt(KEY_Y_OFFSET_DP, newYDp)
+                                .apply()
+
+                            applyCalibrationSettings()
+                        }
+                    } else {
+                        onPetPoked()
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+
+        // Layout parameters configured specifically for seamless punch-hole drawing
+        val params = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            }
+        }
+
+        windowParams = params
+
+        // Initialize badge content & ensure it is always visible
+        updateStatsBadge()
+        layoutStatsBadge.visibility = View.VISIBLE
+        layoutStatsBadge.alpha = 1.0f
+        layoutStatsBadge.scaleX = 1.0f
+        layoutStatsBadge.scaleY = 1.0f
+
+        calculatePosition(params)
+
+        try {
+            windowManager.addView(view, params)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            stopSelf()
+            return
+        }
+
+        // Start live 1-second ticker and gentle idle breathing if screen is interactive
+        if (usageTracker.isScreenCurrentlyOn()) {
+            startSecondTicker()
+            startIdleBreathing()
+        }
+    }
+
+    /**
+     * Calculates the window X and Y based on user calibration sliders.
+     */
+    private fun calculatePosition(params: WindowManager.LayoutParams) {
+        val xPercent = prefs.getFloat(KEY_X_PERCENT, DEFAULT_X_PERCENT)
+        val yOffsetDp = prefs.getInt(KEY_Y_OFFSET_DP, DEFAULT_Y_OFFSET_DP)
+        val petSizeDp = prefs.getInt(KEY_PET_SIZE_DP, DEFAULT_PET_SIZE_DP)
+
+        val density = resources.displayMetrics.density
+        val petSizePx = (petSizeDp * density).toInt()
+
+        // Update pet ImageView layout size
+        val petLp = ivPet.layoutParams
+        if (petLp.width != petSizePx || petLp.height != petSizePx) {
+            petLp.width = petSizePx
+            petLp.height = petSizePx
+            ivPet.layoutParams = petLp
+        }
+
+        val screenWidth = getDisplayWidth()
+        val yPx = (yOffsetDp * density).toInt()
+
+        val petTargetLeft = ((screenWidth * (xPercent / 100f)) - (petSizePx / 2f)).toInt()
+
+        // Dynamic badge orientation: if pet is placed near right edge (> 70%),
+        // badge extends leftward [Badge] [Pet] so it never clips off-screen edge.
+        // Otherwise (including default 55% center punch-hole), pet sits flush beside cutout [Pet] [Badge].
+        val expandToLeft = xPercent > 70f
+        adjustBadgeOrientation(expandToLeft)
+
+        overlayView?.measure(
+            View.MeasureSpec.makeMeasureSpec(screenWidth, View.MeasureSpec.AT_MOST),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val totalWidth = overlayView?.measuredWidth ?: petSizePx
+
+        val windowX = if (expandToLeft) {
+            (petTargetLeft - (totalWidth - petSizePx)).coerceIn(0, (screenWidth - totalWidth).coerceAtLeast(0))
+        } else {
+            petTargetLeft.coerceIn(0, (screenWidth - totalWidth).coerceAtLeast(0))
+        }
+
+        params.x = windowX
+        params.y = yPx
+    }
+
+    private fun adjustBadgeOrientation(expandToLeft: Boolean) {
+        val root = rootContainer
+        val pet = ivPet
+        val badge = layoutStatsBadge
+
+        root.removeAllViews()
+        if (expandToLeft) {
+            // [Badge] [Pet]
+            val badgeLp = badge.layoutParams as? ViewGroup.MarginLayoutParams
+            badgeLp?.marginEnd = (5 * resources.displayMetrics.density).toInt()
+            badgeLp?.marginStart = 0
+            badge.layoutParams = badgeLp
+            root.addView(badge)
+            root.addView(pet)
+        } else {
+            // [Pet] [Badge]
+            val badgeLp = badge.layoutParams as? ViewGroup.MarginLayoutParams
+            badgeLp?.marginStart = (5 * resources.displayMetrics.density).toInt()
+            badgeLp?.marginEnd = 0
+            badge.layoutParams = badgeLp
+            root.addView(pet)
+            root.addView(badge)
+        }
+    }
+
+    /**
+     * Re-applies position and size when sliders change in MainActivity.
+     */
+    private fun applyCalibrationSettings() {
+        val view = overlayView ?: return
+        val params = windowParams ?: return
+
+        calculatePosition(params)
+        try {
+            windowManager.updateViewLayout(view, params)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    /**
+     * Idle Breathing Loop: Pet gently hovers vertically by 2-3dp so it feels alive.
+     */
+    private fun startIdleBreathing() {
+        stopIdleBreathing()
+        val density = resources.displayMetrics.density
+        idleAnimator = ValueAnimator.ofFloat(0f, -2.5f * density, 0f).apply {
+            duration = 2400
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = AccelerateDecelerateInterpolator()
+            addUpdateListener { anim ->
+                if (!isCustomAnimating) {
+                    ivPet.translationY = anim.animatedValue as Float
+                }
+            }
+            start()
+        }
+    }
+
+    private fun stopIdleBreathing() {
+        idleAnimator?.cancel()
+        idleAnimator = null
+        if (!isCustomAnimating) {
+            ivPet.translationY = 0f
+        }
+    }
+
+    /**
+     * Animation 1: Squash & Stretch Double-Bounce.
+     */
+    private fun playSquashBounce() {
+        isCustomAnimating = true
+        val density = resources.displayMetrics.density
+        ivPet.animate()
+            .scaleX(1.35f)
+            .scaleY(0.7f)
+            .setDuration(120)
+            .withEndAction {
+                ivPet.animate()
+                    .scaleX(0.85f)
+                    .scaleY(1.3f)
+                    .translationY(-10f * density)
+                    .setDuration(160)
+                    .setInterpolator(DecelerateInterpolator())
+                    .withEndAction {
+                        ivPet.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .translationY(0f)
+                            .setDuration(180)
+                            .setInterpolator(OvershootInterpolator(2.0f))
+                            .withEndAction { isCustomAnimating = false }
+                            .start()
+                    }
+                    .start()
+            }
+            .start()
+    }
+
+    /**
+     * Animation 2: 360 Somersault Barrel Roll.
+     */
+    private fun playSomersaultRoll() {
+        isCustomAnimating = true
+        ivPet.animate()
+            .rotationBy(360f)
+            .scaleX(1.25f)
+            .scaleY(1.25f)
+            .setDuration(360)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .withEndAction {
+                ivPet.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(140)
+                    .withEndAction {
+                        ivPet.rotation = 0f
+                        isCustomAnimating = false
+                    }
+                    .start()
+            }
+            .start()
+    }
+
+    /**
+     * Animation 3: Startled Wobble / Shiver.
+     */
+    private fun playWobbleShiver() {
+        isCustomAnimating = true
+        ivPet.animate()
+            .rotation(-22f)
+            .setDuration(80)
+            .withEndAction {
+                ivPet.animate()
+                    .rotation(22f)
+                    .setDuration(80)
+                    .withEndAction {
+                        ivPet.animate()
+                            .rotation(-12f)
+                            .setDuration(70)
+                            .withEndAction {
+                                ivPet.animate()
+                                    .rotation(0f)
+                                    .setDuration(70)
+                                    .withEndAction { isCustomAnimating = false }
+                                    .start()
+                            }
+                            .start()
+                    }
+                    .start()
+            }
+            .start()
+    }
+
+    /**
+     * Animation 4: Peek-A-Boo Dip behind the notch.
+     */
+    private fun playPeekABoo() {
+        isCustomAnimating = true
+        val dipDistance = -14f * resources.displayMetrics.density
+        ivPet.animate()
+            .translationY(dipDistance)
+            .scaleX(0.75f)
+            .scaleY(0.75f)
+            .setDuration(180)
+            .withEndAction {
+                mainHandler.postDelayed({
+                    ivPet.animate()
+                        .translationY(0f)
+                        .scaleX(1.2f)
+                        .scaleY(1.2f)
+                        .setDuration(220)
+                        .setInterpolator(OvershootInterpolator(2.5f))
+                        .withEndAction {
+                            ivPet.animate()
+                                .scaleX(1.0f)
+                                .scaleY(1.0f)
+                                .setDuration(120)
+                                .withEndAction { isCustomAnimating = false }
+                                .start()
+                        }
+                        .start()
+                }, 140)
+            }
+            .start()
+    }
+
+    /**
+     * Plays a random poke animation when user taps the pet.
+     */
+    private fun playRandomPokeAnimation() {
+        when ((0..3).random()) {
+            0 -> playSquashBounce()
+            1 -> playSomersaultRoll()
+            2 -> playWobbleShiver()
+            3 -> playPeekABoo()
+        }
+    }
+
+    /**
+     * Wake up pop animation when the phone is unlocked.
+     */
+    private fun playWakeUpAnimation() {
+        isCustomAnimating = true
+        val density = resources.displayMetrics.density
+        ivPet.translationY = -18f * density
+        ivPet.scaleX = 0.5f
+        ivPet.scaleY = 0.5f
+        ivPet.animate()
+            .translationY(0f)
+            .scaleX(1.25f)
+            .scaleY(1.25f)
+            .setDuration(350)
+            .setInterpolator(OvershootInterpolator(2.2f))
+            .withEndAction {
+                ivPet.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(150)
+                    .withEndAction { isCustomAnimating = false }
+                    .start()
+            }
+            .start()
+    }
+
+    /**
+     * Doomscroll tilt to look exhausted.
+     */
+    private fun playDoomscrollTilt() {
+        ivPet.animate()
+            .rotation(15f)
+            .setDuration(300)
+            .start()
+    }
+
+    /**
+     * Displays a sarcastic roast or dialogue in the status pill for a set duration.
+     */
+    private fun showRoast(text: String, durationMs: Long = 4500L) {
+        prefs.edit().putString(KEY_LAST_ROAST, text).apply()
+        activeRoastUntilMs = System.currentTimeMillis() + durationMs
+        tvStatsBadgeText.text = text
+
+        // Subtle pop-in bounce on badge
+        layoutStatsBadge.scaleX = 0.85f
+        layoutStatsBadge.scaleY = 0.85f
+        layoutStatsBadge.animate()
+            .scaleX(1.0f)
+            .scaleY(1.0f)
+            .setDuration(200)
+            .setInterpolator(OvershootInterpolator(2.0f))
+            .start()
+
+        // Update window layout so WindowManager expands to wrap the roast text width
+        windowParams?.let { params ->
+            try {
+                windowManager.updateViewLayout(overlayView, params)
+            } catch (ignored: Exception) {
+            }
+        }
+    }
+
+    private fun dismissRoast() {
+        if (activeRoastUntilMs > 0L) {
+            activeRoastUntilMs = 0L
+            updateStatsBadge(force = true)
+        }
+    }
+
+    /**
+     * Triggered on pet tap: runs a randomized animation & triggers a witty poke roast!
+     */
+    private fun onPetPoked() {
+        playRandomPokeAnimation()
+        val screenTimeMs = usageTracker.getTodayScreenTimeMs()
+        val unlocks = usageTracker.getTodayUnlockCount()
+        showRoast(RoastEngine.getPokeRoast(unlocks, screenTimeMs))
+    }
+
+    /**
+     * Updates the persistent stats badge text with live seconds and unlock count.
+     */
+    private fun updateStatsBadge(force: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (!force && now < activeRoastUntilMs) {
+            return
+        }
+
+        // Check doomscroll milestone (> 25 mins continuous)
+        val continuousMs = usageTracker.getCurrentContinuousScreenTimeMs()
+        if (continuousMs > 25 * 60 * 1000L && !isDoomscrollWarningShown) {
+            isDoomscrollWarningShown = true
+            showRoast(RoastEngine.getDoomscrollRoast())
+            playDoomscrollTilt()
+            return
+        } else if (continuousMs < 25 * 60 * 1000L) {
+            isDoomscrollWarningShown = false
+        }
+
+        val screenTimeMs = usageTracker.getTodayScreenTimeMs()
+        val unlocks = usageTracker.getTodayUnlockCount()
+        val statsText = UsageTracker.formatBadgeStats(screenTimeMs, unlocks)
+        if (tvStatsBadgeText.text != statsText) {
+            tvStatsBadgeText.text = statsText
+            windowParams?.let { params ->
+                try {
+                    windowManager.updateViewLayout(overlayView, params)
+                } catch (ignored: Exception) {
+                }
+            }
+        }
+    }
+
+    private fun startSecondTicker() {
+        if (!isTickerRunning) {
+            isTickerRunning = true
+            mainHandler.removeCallbacks(secondTickerRunnable)
+            mainHandler.post(secondTickerRunnable)
+        }
+    }
+
+    private fun stopSecondTicker() {
+        isTickerRunning = false
+        mainHandler.removeCallbacks(secondTickerRunnable)
+    }
+
+    /**
+     * UsageTracker.Listener callback: Called whenever user unlocks the phone.
+     */
+    override fun onUnlock(totalScreenTimeMs: Long, unlockCount: Int, timeSinceLastScreenOffMs: Long) {
+        mainHandler.post {
+            playWakeUpAnimation()
+            showRoast(RoastEngine.getUnlockRoast(unlockCount, timeSinceLastScreenOffMs))
+            startSecondTicker()
+            startIdleBreathing()
+        }
+    }
+
+    /**
+     * UsageTracker.Listener callback: Screen on / off transitions.
+     * When screen is ON -> start 1s live ticker & idle breathing.
+     * When screen is OFF -> stop ticker & breathing immediately for ZERO battery drain.
+     */
+    override fun onScreenStateChanged(isScreenOn: Boolean, totalScreenTimeMs: Long) {
+        mainHandler.post {
+            if (isScreenOn) {
+                updateStatsBadge()
+                startSecondTicker()
+                startIdleBreathing()
+            } else {
+                stopSecondTicker()
+                stopIdleBreathing()
+            }
+        }
+    }
+
+    private fun getDisplayWidth(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val metrics = windowManager.currentWindowMetrics
+            val bounds: Rect = metrics.bounds
+            bounds.width()
+        } else {
+            val dm = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getRealMetrics(dm)
+            dm.widthPixels
+        }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_STOP_SERVICE -> stopSelf()
+            ACTION_UPDATE_SETTINGS -> applyCalibrationSettings()
+            ACTION_SHOW_BADGE -> onPetPoked()
+            ACTION_POKE_PET -> onPetPoked()
+        }
+        return START_STICKY
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        isRunning = false
+        prefs.edit().putBoolean(KEY_SERVICE_ENABLED, false).apply()
+        stopSecondTicker()
+        stopIdleBreathing()
+        mainHandler.removeCallbacksAndMessages(null)
+
+        try {
+            unregisterReceiver(settingsReceiver)
+        } catch (ignored: Exception) {
+        }
+
+        usageTracker.stopTracking()
+
+        overlayView?.let {
+            try {
+                windowManager.removeView(it)
+            } catch (ignored: Exception) {
+            }
+            overlayView = null
+        }
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    companion object {
+        const val CHANNEL_ID = "screenpet_overlay_channel"
+        const val NOTIFICATION_ID = 1001
+
+        const val ACTION_UPDATE_SETTINGS = "com.screenpet.app.ACTION_UPDATE_SETTINGS"
+        const val ACTION_STOP_SERVICE = "com.screenpet.app.ACTION_STOP_SERVICE"
+        const val ACTION_SHOW_BADGE = "com.screenpet.app.ACTION_SHOW_BADGE"
+        const val ACTION_POKE_PET = "com.screenpet.app.ACTION_POKE_PET"
+
+        const val PREFS_SETTINGS = "screen_pet_settings"
+        const val KEY_SERVICE_ENABLED = "pref_service_enabled"
+        const val KEY_X_PERCENT = "pref_x_percent"
+        const val KEY_Y_OFFSET_DP = "pref_y_dp"
+        const val KEY_PET_SIZE_DP = "pref_pet_size_dp"
+        const val KEY_LAST_ROAST = "pref_last_roast"
+
+        const val DEFAULT_X_PERCENT = 55.0f
+        const val DEFAULT_Y_OFFSET_DP = 4
+        const val DEFAULT_PET_SIZE_DP = 32
+
+        @Volatile
+        var isRunning = false
+            private set
+    }
+}

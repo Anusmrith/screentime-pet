@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootOverlayContainer"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="2dp">
+
+    <!-- Pet avatar button -->
+    <ImageView
+        android:id="@+id/ivPetOverlay"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:clickable="true"
+        android:contentDescription="@string/app_name"
+        android:focusable="false"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_pet" />
+
+    <!-- Sleek translucent capsule stats badge (always visible) -->
+    <LinearLayout
+        android:id="@+id/layoutStatsBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:background="@drawable/bg_pill"
+        android:clickable="true"
+        android:elevation="4dp"
+        android:focusable="false"
+        android:gravity="center"
+        android:visibility="visible"
+        tools:visibility="visible">
+
+        <TextView
+            android:id="@+id/tvStatsBadgeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:singleLine="true"
+            android:textColor="@color/pill_text"
+            android:textSize="11sp"
+            tools:text="0m 15s • 3 🔓" />
+    </LinearLayout>
+
+</LinearLayout>

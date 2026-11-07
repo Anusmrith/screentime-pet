@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Background & Surface Palette -->
+    <color name="bg_dark">#0E1116</color>
+    <color name="surface_dark">#161B22</color>
+    <color name="surface_variant">#21262D</color>
+    <color name="card_stroke">#30363D</color>
+    <color name="card_stroke_active">#58A6FF</color>
+
+    <!-- Brand & Accent Colors -->
+    <color name="primary_accent">#FF8C42</color>
+    <color name="primary_accent_light">#FFA96B</color>
+    <color name="primary_accent_dark">#D46A20</color>
+    <color name="accent_mint">#3FB950</color>
+    <color name="accent_warning">#D29922</color>
+    <color name="accent_danger">#F85149</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#F0F6FC</color>
+    <color name="text_secondary">#8B949E</color>
+    <color name="text_muted">#6E7681</color>
+    <color name="text_on_accent">#FFFFFF</color>
+
+    <!-- Translucent Overlay Pill Elements -->
+    <color name="pill_background">#E6161B22</color>
+    <color name="pill_stroke">#40FFFFFF</color>
+    <color name="pill_text">#F0F6FC</color>
+    <color name="pill_accent">#FF8C42</color>
+    <color name="overlay_scrim">#80000000</color>
+</resources>
+
