@@ -146,39 +146,6 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Future<void> _resetHabitStats() async {
-    HapticFeedback.mediumImpact();
-    final success = await OverlayBridge.resetDailyStats();
-    if (success) {
-      await _loadStats();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.restart_alt_rounded, color: Color(0xFFFF8C42), size: 18),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Timer and unlocks reset to 0m 00s • 0 🔓 (12:00 AM clock state)!',
-                  style: TextStyle(fontSize: 13, color: Color(0xFFF0F6FC)),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: const Color(0xFF161B22),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: Color(0xFF30363D)),
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
-  }
-
   Future<void> _toggleOverlay() async {
     HapticFeedback.lightImpact();
     if (!_hasPermission) {
@@ -563,74 +530,40 @@ class _DashboardScreenState extends State<DashboardScreen>
                         color: Color(0xFF6E7681),
                       ),
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Quick Reset Button (Tests 12:00 AM Midnight Reset)
-                        InkWell(
-                          onTap: _resetHabitStats,
+                    // Tactile Refresh Button with Spin Animation
+                    InkWell(
+                      onTap: _handleManualRefresh,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF8C42).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF21262D).withValues(alpha: 0.6),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFF30363D)),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.restart_alt_rounded, size: 13, color: Color(0xFF8B949E)),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Reset',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFF8B949E),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          border: Border.all(color: const Color(0xFFFF8C42).withValues(alpha: 0.4)),
                         ),
-                        const SizedBox(width: 6),
-                        // Tactile Refresh Button with Spin Animation
-                        InkWell(
-                          onTap: _handleManualRefresh,
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFF8C42).withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFFF8C42).withValues(alpha: 0.4)),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            RotationTransition(
+                              turns: _refreshAnimation,
+                              child: const Icon(
+                                Icons.refresh_rounded,
+                                size: 14,
+                                color: Color(0xFFFF8C42),
+                              ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                RotationTransition(
-                                  turns: _refreshAnimation,
-                                  child: const Icon(
-                                    Icons.refresh_rounded,
-                                    size: 14,
-                                    color: Color(0xFFFF8C42),
-                                  ),
-                                ),
-                                const SizedBox(width: 5),
-                                const Text(
-                                  'Refresh',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Color(0xFFFF8C42),
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
+                            const SizedBox(width: 5),
+                            const Text(
+                              'Refresh',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFFFF8C42),
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
