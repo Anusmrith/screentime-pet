@@ -11,147 +11,37 @@ class WardrobeScreen extends StatefulWidget {
 }
 
 class _WardrobeScreenState extends State<WardrobeScreen> {
-  String _selectedSkinId = 'cat';
-
-  void _showSkinDetails(PetSkin skin) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: BotanicalTheme.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Skin Preview Avatar
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: BotanicalTheme.butter,
-                  border: Border.all(color: BotanicalTheme.primary, width: 2),
-                ),
-                alignment: Alignment.center,
-                child: skin.assetPath != null
-                    ? Image.asset(skin.assetPath!, width: 68, height: 68)
-                    : Text(skin.emoji, style: const TextStyle(fontSize: 44)),
-              ),
-              const SizedBox(height: 16),
-
-              Text(
-                skin.name,
+  void _showComingSoonToast([String? skinName]) {
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Text('🔒', style: TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                skinName != null
+                    ? '$skinName is coming soon! 🐾 Stay tuned!'
+                    : 'Wardrobe is coming soon! 🐾 Stay tuned for cozy seasonal outfits!',
                 style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
                   color: BotanicalTheme.textMain,
                 ),
               ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: BotanicalTheme.butter,
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(color: BotanicalTheme.butterBorder),
-                ),
-                child: Text(
-                  skin.rarity,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: BotanicalTheme.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              Text(
-                skin.subtitle,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: BotanicalTheme.textMuted,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              if (skin.isUnlocked) ...[
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      setState(() => _selectedSkinId = skin.id);
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).clearSnackBars();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${skin.name} is now active on your notch!'),
-                          backgroundColor: BotanicalTheme.primary,
-                          duration: const Duration(seconds: 2),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: BotanicalTheme.primary,
-                      foregroundColor: BotanicalTheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                    ),
-                    child: Text(
-                      _selectedSkinId == skin.id ? 'Equipped' : 'Equip Skin',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ] else ...[
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).clearSnackBars();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'In-App Purchase (${skin.price}): Payment sandbox ready for ${skin.name}!',
-                          ),
-                          backgroundColor: BotanicalTheme.primary,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: BotanicalTheme.butter,
-                      foregroundColor: BotanicalTheme.primary,
-                      side: const BorderSide(color: BotanicalTheme.primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                    ),
-                    child: Text(
-                      'Unlock Skin for ${skin.price}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+        backgroundColor: BotanicalTheme.butter,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: BotanicalTheme.butterBorder),
+        ),
+      ),
     );
   }
 
@@ -167,7 +57,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Banner & Gem Balance Row
+              // Top Banner Header Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -185,7 +75,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                       ),
                       SizedBox(height: 1),
                       Text(
-                        'Tap any cozy friend to dress up your notch',
+                        'Custom companion skins & outfits',
                         style: TextStyle(
                           fontSize: 12,
                           color: BotanicalTheme.textMuted,
@@ -209,10 +99,10 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                     ),
                     child: const Row(
                       children: [
-                        Text('💎', style: TextStyle(fontSize: 12)),
+                        Text('🔒', style: TextStyle(fontSize: 11)),
                         SizedBox(width: 4),
                         Text(
-                          '320 Gems',
+                          'Locked',
                           style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w800,
@@ -227,63 +117,81 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
               const SizedBox(height: 14),
 
-              // Soft Creamy Pastel Banner
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: BotanicalTheme.butter,
-                  borderRadius: BorderRadius.circular(BotanicalTheme.radiusLg),
-                  border: Border.all(color: BotanicalTheme.butterBorder),
-                  boxShadow: BotanicalTheme.cardShadow,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(14),
+              // Locked Hero Callout Banner
+              InkWell(
+                onTap: () => _showComingSoonToast(),
+                borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: BotanicalTheme.butter,
+                    borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
+                    border: Border.all(color: BotanicalTheme.butterBorder),
+                    boxShadow: BotanicalTheme.cardShadow,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Center(
+                          child: Text('🔒', style: TextStyle(fontSize: 24)),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.auto_awesome_rounded,
-                        color: BotanicalTheme.primary,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Customize Your Screen Companion',
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w800,
-                              color: BotanicalTheme.textMain,
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Wardrobe Coming Soon!',
+                              style: TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w800,
+                                color: BotanicalTheme.textMain,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Choose unique skins tailored for punch-hole cameras and OLED notch cutouts.',
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: BotanicalTheme.textMuted,
-                              height: 1.35,
+                            SizedBox(height: 3),
+                            Text(
+                              'We\'re tailoring cozy companion outfits and OLED notch cutouts. Check back in an upcoming update!',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: BotanicalTheme.textMuted,
+                                height: 1.35,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // Grid of Pet Skins
+              // Section Label
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  'UPCOMING SKINS PREVIEW',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                    color: BotanicalTheme.textMain,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Grid of Locked Pet Skins
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -296,20 +204,16 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                 itemCount: skins.length,
                 itemBuilder: (context, index) {
                   final skin = skins[index];
-                  final isEquipped = skin.id == _selectedSkinId;
 
                   return InkWell(
-                    onTap: () => _showSkinDetails(skin),
+                    onTap: () => _showComingSoonToast(skin.name),
                     borderRadius: BorderRadius.circular(BotanicalTheme.radiusLg),
                     child: Container(
                       decoration: BoxDecoration(
                         color: BotanicalTheme.surface,
                         borderRadius: BorderRadius.circular(BotanicalTheme.radiusLg),
                         border: Border.all(
-                          color: isEquipped
-                              ? BotanicalTheme.primary
-                              : BotanicalTheme.outline.withValues(alpha: 0.5),
-                          width: isEquipped ? 2 : 1,
+                          color: BotanicalTheme.outline.withValues(alpha: 0.5),
                         ),
                         boxShadow: BotanicalTheme.cardShadow,
                       ),
@@ -317,7 +221,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Top Right Status / Lock Tag
+                          // Top Status Tag with Lock
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -327,75 +231,48 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                                   color: BotanicalTheme.canvas,
                                   borderRadius: BorderRadius.circular(100),
                                 ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.pets_rounded,
-                                        size: 10, color: BotanicalTheme.primary),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      isEquipped ? 'Notch Hug' : skin.rarity.split(' ').first,
-                                      style: const TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w700,
-                                        color: BotanicalTheme.primary,
-                                      ),
-                                    ),
-                                  ],
+                                child: Text(
+                                  skin.rarity.split(' ').first,
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: BotanicalTheme.primary,
+                                  ),
                                 ),
                               ),
-                              if (isEquipped)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: BotanicalTheme.butter,
-                                    borderRadius: BorderRadius.circular(100),
-                                    border: Border.all(color: BotanicalTheme.butterBorder),
-                                  ),
-                                  child: const Text(
-                                    'ACTIVE',
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w900,
-                                      color: BotanicalTheme.primary,
-                                    ),
-                                  ),
-                                )
-                              else if (!skin.isUnlocked)
-                                Container(
-                                  width: 22,
-                                  height: 22,
-                                  decoration: const BoxDecoration(
-                                    color: BotanicalTheme.canvas,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.lock_rounded,
-                                    size: 12,
-                                    color: BotanicalTheme.textMuted,
-                                  ),
+                              Container(
+                                width: 22,
+                                height: 22,
+                                decoration: const BoxDecoration(
+                                  color: BotanicalTheme.canvas,
+                                  shape: BoxShape.circle,
                                 ),
+                                child: const Icon(
+                                  Icons.lock_rounded,
+                                  size: 12,
+                                  color: BotanicalTheme.textMuted,
+                                ),
+                              ),
                             ],
                           ),
 
-                          // Skin Avatar
+                          // Skin Avatar (slightly dimmed)
                           Expanded(
                             child: Center(
-                              child: skin.assetPath != null
-                                  ? Image.asset(
-                                      skin.assetPath!,
-                                      width: 60,
-                                      height: 60,
-                                      fit: BoxFit.contain,
-                                    )
-                                  : Text(
-                                      skin.emoji,
-                                      style: TextStyle(
-                                        fontSize: 46,
-                                        color: skin.isUnlocked
-                                            ? null
-                                            : Colors.grey.withValues(alpha: 0.5),
+                              child: Opacity(
+                                opacity: 0.75,
+                                child: skin.assetPath != null
+                                    ? Image.asset(
+                                        skin.assetPath!,
+                                        width: 58,
+                                        height: 58,
+                                        fit: BoxFit.contain,
+                                      )
+                                    : Text(
+                                        skin.emoji,
+                                        style: const TextStyle(fontSize: 44),
                                       ),
-                                    ),
+                              ),
                             ),
                           ),
 
@@ -411,32 +288,31 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                           ),
                           const SizedBox(height: 6),
 
-                          // Price / State Pill Button
+                          // Locked Pill Button
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 5),
                             decoration: BoxDecoration(
-                              color: isEquipped
-                                  ? BotanicalTheme.primary
-                                  : BotanicalTheme.butter,
+                              color: BotanicalTheme.surfaceContainer,
                               borderRadius: BorderRadius.circular(100),
                               border: Border.all(
-                                color: isEquipped
-                                    ? BotanicalTheme.primary
-                                    : BotanicalTheme.butterBorder,
+                                color: BotanicalTheme.outline.withValues(alpha: 0.6),
                               ),
                             ),
-                            child: Center(
-                              child: Text(
-                                isEquipped ? '✓ Equipped' : skin.price,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                  color: isEquipped
-                                      ? BotanicalTheme.onPrimary
-                                      : BotanicalTheme.primary,
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.lock_rounded, size: 11, color: BotanicalTheme.textMuted),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Coming Soon',
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: BotanicalTheme.textMuted,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                         ],
@@ -448,7 +324,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
               const SizedBox(height: 16),
 
-              // Bottom Indie Support Note
+              // Bottom Notice
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -466,7 +342,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                         size: 16, color: BotanicalTheme.primary),
                     SizedBox(width: 8),
                     Text(
-                      'All purchases support cozy indie updates & seasonal skins!',
+                      'Wardrobe & custom skins are coming soon!',
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w500,

@@ -44,6 +44,36 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   void _navigateToIndex(int index) {
     HapticFeedback.selectionClick();
+    if (index == 2) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Text('🔒', style: TextStyle(fontSize: 16)),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Wardrobe is coming soon! 🐾 Stay tuned for cozy seasonal outfits!',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: BotanicalTheme.textMain,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: BotanicalTheme.butter,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: BotanicalTheme.butterBorder),
+          ),
+        ),
+      );
+    }
     setState(() => _currentIndex = index);
   }
 
@@ -129,7 +159,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             children: [
               _buildTabItem(0, Icons.auto_awesome_rounded, 'Dashboard'),
               _buildTabItem(1, Icons.tune_rounded, 'Calibration'),
-              _buildTabItem(2, Icons.pets_rounded, 'Wardrobe'),
+              _buildTabItem(2, Icons.lock_outline_rounded, 'Wardrobe'),
             ],
           ),
         ),

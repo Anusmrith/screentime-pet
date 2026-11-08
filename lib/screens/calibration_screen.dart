@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../overlay_bridge.dart';
@@ -15,11 +16,18 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   int _yDp = 4;
   int _sizeDp = 32;
   bool _isLoading = true;
+  Timer? _syncDebounceTimer;
 
   @override
   void initState() {
     super.initState();
     _loadInitialCalibration();
+  }
+
+  @override
+  void dispose() {
+    _syncDebounceTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadInitialCalibration() async {
@@ -34,12 +42,26 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     }
   }
 
-  void _syncCalibration() {
-    OverlayBridge.updateCalibration(
-      xPercent: _xPercent,
-      yDp: _yDp,
-      sizeDp: _sizeDp,
-    );
+  /// Debounces rapid slider movements to prevent flooding the platform IPC channel.
+  void _syncCalibration({bool immediate = false}) {
+    if (immediate) {
+      _syncDebounceTimer?.cancel();
+      OverlayBridge.updateCalibration(
+        xPercent: _xPercent,
+        yDp: _yDp,
+        sizeDp: _sizeDp,
+      );
+      return;
+    }
+
+    if (_syncDebounceTimer?.isActive ?? false) return;
+    _syncDebounceTimer = Timer(const Duration(milliseconds: 35), () {
+      OverlayBridge.updateCalibration(
+        xPercent: _xPercent,
+        yDp: _yDp,
+        sizeDp: _sizeDp,
+      );
+    });
   }
 
   void _resetToCenter() {
@@ -49,7 +71,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
       _yDp = 4;
       _sizeDp = 32;
     });
-    _syncCalibration();
+    _syncCalibration(immediate: true);
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -71,7 +93,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
       _xPercent = targetX;
       _yDp = targetY;
     });
-    _syncCalibration();
+    _syncCalibration(immediate: true);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).clearSnackBars();
@@ -84,6 +106,44 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
         ),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Widget _buildPetWidget(double size) {
+    return Container(
+      width: size,
+      height: size,
+      padding: const EdgeInsets.all(2),
+      child: Image.asset(
+        'assets/cat/animations/gifs/idle.gif',
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+
+  Widget _buildBadgeWidget() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: BotanicalTheme.butter,
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(color: BotanicalTheme.butterBorder),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x20000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: const Text(
+        '0m 15s • 3 🔓',
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          color: BotanicalTheme.primary,
+        ),
       ),
     );
   }
@@ -238,86 +298,91 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Dark Viewport in Deep Forest Evergreen
-                    Container(
-                      width: double.infinity,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        color: BotanicalTheme.primary,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x33000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          // Simulated Camera Cutout Ring
-                          Align(
-                            alignment: const Alignment(0.0, -0.6),
-                            child: Container(
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.black,
-                                border: Border.all(
-                                  color: BotanicalTheme.butter.withValues(alpha: 0.3),
-                                  width: 1.5,
-                                ),
-                              ),
+                    // Dark Viewport in Deep Forest Evergreen (Glitch-free, clipped & dynamically oriented)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        width: double.infinity,
+                        height: 110,
+                        decoration: BoxDecoration(
+                          color: BotanicalTheme.primary,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x33000000),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
                             ),
-                          ),
+                          ],
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final w = constraints.maxWidth;
+                            final h = constraints.maxHeight;
+                            final expandToLeft = _xPercent > 70.0;
+                            final size = _sizeDp.toDouble().clamp(20.0, 56.0);
+                            const totalBadgeW = 76.0;
+                            final totalContentW = size + 4.0 + totalBadgeW;
 
-                          // Live Moving Animated Pet Preview with soft butter pill
-                          Align(
-                            alignment: Alignment(
-                              ((_xPercent / 50.0) - 1.0).clamp(-1.0, 1.0),
-                              ((_yDp / 40.0) - 0.7).clamp(-1.0, 1.0),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                            // Calculate coordinate matching PetOverlayService
+                            final petCenterTargetX = w * (_xPercent / 100.0);
+                            final petTopTargetY = (_yDp * 1.0).clamp(4.0, (h - size - 6.0).clamp(4.0, h));
+
+                            final double groupLeft;
+                            if (expandToLeft) {
+                              // [Badge] [Pet]
+                              groupLeft = (petCenterTargetX - totalContentW + size / 2)
+                                  .clamp(4.0, (w - totalContentW - 4.0).clamp(4.0, w));
+                            } else {
+                              // [Pet] [Badge]
+                              groupLeft = (petCenterTargetX - size / 2)
+                                  .clamp(4.0, (w - totalContentW - 4.0).clamp(4.0, w));
+                            }
+
+                            return Stack(
+                              clipBehavior: Clip.hardEdge,
                               children: [
-                                Container(
-                                  width: _sizeDp.toDouble(),
-                                  height: _sizeDp.toDouble(),
-                                  padding: const EdgeInsets.all(2),
-                                  child: Image.asset(
-                                    'assets/cat/animations/gifs/idle.gif',
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: BotanicalTheme.butter,
-                                    borderRadius: BorderRadius.circular(100),
-                                    border: Border.all(color: BotanicalTheme.butterBorder),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0x20000000),
-                                        blurRadius: 4,
-                                        offset: Offset(0, 1),
+                                // Center Camera Cutout Ring
+                                Positioned(
+                                  left: (w * 0.5) - 8,
+                                  top: 10,
+                                  child: Container(
+                                    width: 16,
+                                    height: 16,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.black,
+                                      border: Border.all(
+                                        color: BotanicalTheme.butter.withValues(alpha: 0.35),
+                                        width: 1.5,
                                       ),
-                                    ],
-                                  ),
-                                  child: const Text(
-                                    '0m 15s • 3 🔓',
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w800,
-                                      color: BotanicalTheme.primary,
                                     ),
                                   ),
                                 ),
+
+                                // Moving Pet + Badge Group
+                                Positioned(
+                                  left: groupLeft,
+                                  top: petTopTargetY,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: expandToLeft
+                                        ? [
+                                            _buildBadgeWidget(),
+                                            const SizedBox(width: 4),
+                                            _buildPetWidget(size),
+                                          ]
+                                        : [
+                                            _buildPetWidget(size),
+                                            const SizedBox(width: 4),
+                                            _buildBadgeWidget(),
+                                          ],
+                                  ),
+                                ),
                               ],
-                            ),
-                          ),
-                        ],
+                            );
+                          },
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -422,6 +487,9 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                           setState(() => _xPercent = val);
                           _syncCalibration();
                         },
+                        onChangeEnd: (val) {
+                          _syncCalibration(immediate: true);
+                        },
                       ),
                     ),
 
@@ -475,6 +543,9 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                           setState(() => _yDp = val.round());
                           _syncCalibration();
                         },
+                        onChangeEnd: (val) {
+                          _syncCalibration(immediate: true);
+                        },
                       ),
                     ),
 
@@ -527,6 +598,9 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                         onChanged: (val) {
                           setState(() => _sizeDp = val.round());
                           _syncCalibration();
+                        },
+                        onChangeEnd: (val) {
+                          _syncCalibration(immediate: true);
                         },
                       ),
                     ),
