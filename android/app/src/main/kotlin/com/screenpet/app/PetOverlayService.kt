@@ -32,12 +32,14 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.DecelerateInterpolator
+import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import java.util.Random
 import kotlin.math.abs
 
 /**
@@ -66,10 +68,18 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     private var isTickerRunning = false
     private var activeRoastUntilMs = 0L
     private var isCustomAnimating = false
+    private var isWalking = false
+    private var isNapping = false
+    private var lastInteractiveEventTimeMs = System.currentTimeMillis()
+    private val random = Random()
     private var idleAnimator: ValueAnimator? = null
     private var isDoomscrollWarningShown = false
     private var currentPetDrawable: Drawable? = null
     private var revertToIdleRunnable: Runnable? = null
+
+    private val ambientActionRunnable = Runnable {
+        triggerAmbientBehavior()
+    }
 
     private val secondTickerRunnable = object : Runnable {
         override fun run() {
@@ -224,6 +234,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
                 if (usageTracker.isScreenCurrentlyOn()) {
                     startSecondTicker()
                     startIdleBreathing()
+                    scheduleNextAmbientAction()
                 }
             }
             updateNotification()
@@ -237,6 +248,12 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         mainHandler.post {
             stopSecondTicker()
             stopIdleBreathing()
+            cancelAmbientAction()
+            if (isWalking) {
+                ivPet.animate().cancel()
+                ivPet.translationX = 0f
+                isWalking = false
+            }
             (currentPetDrawable as? AnimatedImageDrawable)?.stop()
             revertToIdleRunnable?.let { mainHandler.removeCallbacks(it) }
             revertToIdleRunnable = null
@@ -265,6 +282,11 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         layoutStatsBadge = view.findViewById(R.id.layoutStatsBadge)
         tvStatsBadgeText = view.findViewById(R.id.tvStatsBadgeText)
 
+        rootContainer.clipChildren = false
+        rootContainer.clipToPadding = false
+        (view as? ViewGroup)?.clipChildren = false
+        (view as? ViewGroup)?.clipToPadding = false
+
         // Always visible badge; tapping badge triggers poke or dismisses active roast
         layoutStatsBadge.setOnClickListener {
             if (activeRoastUntilMs > System.currentTimeMillis()) {
@@ -285,6 +307,16 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         ivPet.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    cancelAmbientAction()
+                    if (isWalking) {
+                        ivPet.animate().cancel()
+                        ivPet.translationX = 0f
+                        isWalking = false
+                    }
+                    if (isNapping) {
+                        isNapping = false
+                    }
+                    lastInteractiveEventTimeMs = System.currentTimeMillis()
                     initialX = windowParams?.x ?: 0
                     initialY = windowParams?.y ?: 0
                     initialTouchX = event.rawX
@@ -297,6 +329,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
                     val dy = event.rawY - initialTouchY
                     if (!isDragging && (abs(dx) > touchSlop || abs(dy) > touchSlop)) {
                         isDragging = true
+                        setPetAnimation(R.raw.cat_pounce, loop = true)
                     }
                     if (isDragging) {
                         windowParams?.let { params ->
@@ -331,6 +364,9 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
                             applyCalibrationSettings()
                         }
+                        playSquashBounce()
+                        setPetAnimation(R.raw.cat_idle, loop = true)
+                        scheduleNextAmbientAction()
                     } else {
                         onPetPoked()
                     }
@@ -464,6 +500,12 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     private fun applyCalibrationSettings() {
         val view = overlayView ?: return
         val params = windowParams ?: return
+
+        if (isWalking) {
+            ivPet.animate().cancel()
+            ivPet.translationX = 0f
+            isWalking = false
+        }
 
         calculatePosition(params)
         try {
@@ -751,10 +793,166 @@ class PetOverlayService : Service(), UsageTracker.Listener {
      * Triggered on pet tap: runs a randomized animation & triggers a witty poke roast!
      */
     private fun onPetPoked() {
+        lastInteractiveEventTimeMs = System.currentTimeMillis()
+        if (isWalking) {
+            ivPet.animate().cancel()
+            ivPet.translationX = 0f
+            isWalking = false
+        }
+        if (isNapping) {
+            isNapping = false
+            playWakeUpAnimation()
+            setPetAnimation(R.raw.cat_happy, loop = true, autoRevertMs = 2400L)
+            showRoast("Yaaawn... awake now! 🐾")
+            scheduleNextAmbientAction()
+            return
+        }
         playRandomPokeAnimation()
         val screenTimeMs = usageTracker.getTodayScreenTimeMs()
         val unlocks = usageTracker.getTodayUnlockCount()
         showRoast(RoastEngine.getPokeRoast(unlocks, screenTimeMs))
+        scheduleNextAmbientAction()
+    }
+
+    private fun scheduleNextAmbientAction(minDelayMs: Long = 11000L, maxDelayMs: Long = 22000L) {
+        cancelAmbientAction()
+        if (!usageTracker.isScreenCurrentlyOn() || !isOverlayVisible) return
+
+        val delay = minDelayMs + (random.nextFloat() * (maxDelayMs - minDelayMs)).toLong()
+        mainHandler.postDelayed(ambientActionRunnable, delay)
+    }
+
+    private fun cancelAmbientAction() {
+        mainHandler.removeCallbacks(ambientActionRunnable)
+    }
+
+    private fun triggerAmbientBehavior() {
+        if (!isOverlayVisible || !usageTracker.isScreenCurrentlyOn()) return
+        if (isCustomAnimating || isWalking) {
+            scheduleNextAmbientAction(6000L, 12000L)
+            return
+        }
+        if (activeRoastUntilMs > System.currentTimeMillis()) {
+            scheduleNextAmbientAction(6000L, 12000L)
+            return
+        }
+
+        val now = System.currentTimeMillis()
+        val timeSinceInteraction = now - lastInteractiveEventTimeMs
+
+        // If inactive for > 75s, curl up and nap
+        if (timeSinceInteraction > 75000L && !isNapping) {
+            isNapping = true
+            setPetAnimation(R.raw.cat_sleep, loop = true)
+            scheduleNextAmbientAction(20000L, 35000L)
+            return
+        }
+
+        if (isNapping) {
+            scheduleNextAmbientAction(20000L, 35000L)
+            return
+        }
+
+        val choice = random.nextInt(6)
+        when (choice) {
+            0, 1 -> performAmbientWalk() // Pacing walk across status bar!
+            2 -> performAmbientLookAround()
+            3 -> performAmbientPlay()
+            4 -> performAmbientWave()
+            5 -> performAmbientHappy()
+        }
+    }
+
+    private fun performAmbientWalk() {
+        if (isWalking || isCustomAnimating) return
+        isWalking = true
+
+        val xPercent = prefs.getFloat(KEY_X_PERCENT, DEFAULT_X_PERCENT)
+        val walkLeft = when {
+            xPercent > 70f -> true
+            xPercent < 30f -> false
+            else -> random.nextBoolean()
+        }
+
+        val density = resources.displayMetrics.density
+        val walkDistDp = 22f + (random.nextFloat() * 14f)
+        val targetTranslationX = if (walkLeft) -walkDistDp * density else walkDistDp * density
+
+        val walkAnimRes = if (walkLeft) R.raw.cat_walk else R.raw.cat_walk_right
+        setPetAnimation(walkAnimRes, loop = true)
+
+        ivPet.animate()
+            .translationX(targetTranslationX)
+            .setDuration(1200)
+            .setInterpolator(LinearInterpolator())
+            .withEndAction {
+                if (!isWalking || !isOverlayVisible) return@withEndAction
+                setPetAnimation(R.raw.cat_look_around, loop = true)
+                mainHandler.postDelayed({
+                    if (!isWalking || !isOverlayVisible) return@postDelayed
+                    val returnAnimRes = if (walkLeft) R.raw.cat_walk_right else R.raw.cat_walk
+                    setPetAnimation(returnAnimRes, loop = true)
+                    ivPet.animate()
+                        .translationX(0f)
+                        .setDuration(1200)
+                        .setInterpolator(LinearInterpolator())
+                        .withEndAction {
+                            isWalking = false
+                            setPetAnimation(R.raw.cat_idle, loop = true)
+                            scheduleNextAmbientAction()
+                        }
+                        .start()
+                }, 1600)
+            }
+            .start()
+    }
+
+    private fun performAmbientLookAround() {
+        setPetAnimation(R.raw.cat_look_around, loop = true, autoRevertMs = 2800L)
+        ivPet.animate()
+            .rotation(7f)
+            .setDuration(300)
+            .withEndAction {
+                ivPet.animate()
+                    .rotation(-7f)
+                    .setDuration(300)
+                    .withEndAction {
+                        ivPet.rotation = 0f
+                    }
+                    .start()
+            }
+            .start()
+        scheduleNextAmbientAction()
+    }
+
+    private fun performAmbientPlay() {
+        setPetAnimation(R.raw.cat_play, loop = true, autoRevertMs = 2500L)
+        playSquashBounce()
+        scheduleNextAmbientAction()
+    }
+
+    private fun performAmbientWave() {
+        setPetAnimation(R.raw.cat_wave, loop = true, autoRevertMs = 2500L)
+        if (activeRoastUntilMs <= System.currentTimeMillis()) {
+            showRoast(RoastEngine.getAmbientWhisper(), durationMs = 2500L)
+        }
+        scheduleNextAmbientAction()
+    }
+
+    private fun performAmbientHappy() {
+        setPetAnimation(R.raw.cat_happy, loop = true, autoRevertMs = 2400L)
+        val density = resources.displayMetrics.density
+        ivPet.animate()
+            .translationY(-5f * density)
+            .setDuration(160)
+            .withEndAction {
+                ivPet.animate()
+                    .translationY(0f)
+                    .setDuration(160)
+                    .start()
+            }
+            .start()
+        scheduleNextAmbientAction()
     }
 
     /**
@@ -810,32 +1008,49 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     override fun onUnlock(totalScreenTimeMs: Long, unlockCount: Int, timeSinceLastScreenOffMs: Long) {
         mainHandler.post {
             if (isOverlayVisible) {
+                lastInteractiveEventTimeMs = System.currentTimeMillis()
+                isNapping = false
+                if (isWalking) {
+                    ivPet.animate().cancel()
+                    ivPet.translationX = 0f
+                    isWalking = false
+                }
                 val unlockAnimRes = if (unlockCount % 5 == 0) R.raw.cat_celebrate else R.raw.cat_wave
                 setPetAnimation(unlockAnimRes, loop = true, autoRevertMs = 2800L)
                 playWakeUpAnimation()
                 showRoast(RoastEngine.getUnlockRoast(unlockCount, timeSinceLastScreenOffMs))
                 startSecondTicker()
                 startIdleBreathing()
+                scheduleNextAmbientAction(10000L, 20000L)
             }
         }
     }
 
     /**
      * UsageTracker.Listener callback: Screen on / off transitions.
-     * When screen is ON -> start 1s live ticker & idle breathing (if overlay visible).
-     * When screen is OFF -> stop ticker & breathing immediately for ZERO battery drain.
+     * When screen is ON -> start 1s live ticker, idle breathing & ambient wander.
+     * When screen is OFF -> stop ticker, breathing & ambient loop immediately for ZERO battery drain.
      */
     override fun onScreenStateChanged(isScreenOn: Boolean, totalScreenTimeMs: Long) {
         mainHandler.post {
             if (isOverlayVisible) {
                 if (isScreenOn) {
+                    lastInteractiveEventTimeMs = System.currentTimeMillis()
+                    isNapping = false
                     setPetAnimation(R.raw.cat_idle, loop = true)
                     updateStatsBadge()
                     startSecondTicker()
                     startIdleBreathing()
+                    scheduleNextAmbientAction(8000L, 16000L)
                 } else {
                     stopSecondTicker()
                     stopIdleBreathing()
+                    cancelAmbientAction()
+                    if (isWalking) {
+                        ivPet.animate().cancel()
+                        ivPet.translationX = 0f
+                        isWalking = false
+                    }
                     (currentPetDrawable as? AnimatedImageDrawable)?.stop()
                     revertToIdleRunnable?.let { mainHandler.removeCallbacks(it) }
                     revertToIdleRunnable = null
@@ -893,6 +1108,12 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         prefs.edit().putBoolean(KEY_SERVICE_ENABLED, false).apply()
         stopSecondTicker()
         stopIdleBreathing()
+        cancelAmbientAction()
+        if (isWalking) {
+            ivPet.animate().cancel()
+            ivPet.translationX = 0f
+            isWalking = false
+        }
         mainHandler.removeCallbacksAndMessages(null)
 
         try {

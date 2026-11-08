@@ -20,6 +20,8 @@ object RoastEngine {
         "Pani edukk bro, padikk 💼",
         "Enthada angane nokkunne? 🤨",
         "Thodathe bro, ticklish aanu 😹",
+        "Aha, enneyum thottu kalikkunno? 🐾",
+        "Meow! Njan camera guard aanu 🐱",
         // English
         "Hey, watch the whiskers! 😼",
         "Stop poking, start working! 💼",
@@ -29,8 +31,32 @@ object RoastEngine {
         "Checking screentime won't lower it 📉",
         "Do I look like a touchscreen? 🤨",
         "Pet tax: 1 fish please 🐟",
-        "Still here? Be productive! ⚡"
+        "Still here? Be productive! ⚡",
+        "Got your eyes on me or your work? 😼",
+        "Wheee! High five! 🐾"
     )
+
+    private val AMBIENT_WHISPERS = listOf(
+        "Purrrr... 🐾",
+        "Meow! 😸",
+        "Pacing around the notch 🚶",
+        "Blink your eyes! 👀",
+        "Still scrolling? 📱",
+        "Cozy status bar spot 🌿",
+        "Just stretching my paws 🐾",
+        "Catch me if you can! 😼",
+        "Stay hydrated! 💧",
+        "Watching over your phone 🐱",
+        "Nice focus! Keep it up ⭐",
+        "Curious what you're building! 🧶"
+    )
+
+    /**
+     * Generates a gentle ambient whisper when the pet wanders autonomously.
+     */
+    fun getAmbientWhisper(): String {
+        return AMBIENT_WHISPERS.random()
+    }
 
     private val QUICK_RELOCK_ROASTS = listOf(
         // Manglish

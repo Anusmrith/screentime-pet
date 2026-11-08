@@ -25,13 +25,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Timer? _refreshTimer;
   String _activeAnimation = 'idle';
   Timer? _animResetTimer;
+  Timer? _ambientSequenceTimer;
+
+  // Interactive motion physics state
+  double _petOffsetX = 0.0;
+  double _petScale = 1.0;
+  double _petRotation = 0.0;
+  bool _isUserDragging = false;
 
   void _triggerPetAnimation(String animName, [String? dialogue]) {
     _animResetTimer?.cancel();
+    _ambientSequenceTimer?.cancel();
     setState(() {
       _activeAnimation = animName;
       if (dialogue != null && dialogue.isNotEmpty) {
         _lastRoast = dialogue;
+      }
+      if (animName == 'walk') {
+        _petOffsetX = -35.0;
+      } else if (animName == 'walk_right') {
+        _petOffsetX = 35.0;
+      } else if (animName == 'jump' || animName == 'play' || animName == 'celebrate') {
+        _petScale = 1.15;
+      } else if (animName == 'curious') {
+        _petRotation = 0.1;
+      } else {
+        _petOffsetX = 0.0;
+        _petScale = 1.0;
+        _petRotation = 0.0;
       }
     });
 
@@ -40,8 +61,130 @@ class _DashboardScreenState extends State<DashboardScreen> {
         if (mounted) {
           setState(() {
             _activeAnimation = 'idle';
+            _petOffsetX = 0.0;
+            _petScale = 1.0;
+            _petRotation = 0.0;
           });
+          _scheduleNextAmbientAction();
         }
+      });
+    } else {
+      _scheduleNextAmbientAction();
+    }
+  }
+
+  void _scheduleNextAmbientAction() {
+    _ambientSequenceTimer?.cancel();
+    if (!mounted) return;
+    final delaySeconds = 11 + (DateTime.now().second % 9); // 11 to 19s
+    _ambientSequenceTimer = Timer(Duration(seconds: delaySeconds), () {
+      if (!mounted) return;
+      _performRandomAmbientSequence();
+    });
+  }
+
+  void _performRandomAmbientSequence() {
+    if (_isUserDragging || _activeAnimation != 'idle') {
+      _scheduleNextAmbientAction();
+      return;
+    }
+
+    final rand = DateTime.now().millisecond % 5;
+    if (rand == 0 || rand == 1) {
+      // Sequence 1: Walk left across cushion, look around, walk right, return to center
+      setState(() {
+        _activeAnimation = 'walk';
+        _petOffsetX = -36.0;
+      });
+      Future.delayed(const Duration(milliseconds: 1100), () {
+        if (!mounted || _isUserDragging) return;
+        setState(() {
+          _activeAnimation = 'look_around';
+          _lastRoast = 'Patrolling the cushion... 🐾';
+        });
+        Future.delayed(const Duration(milliseconds: 1800), () {
+          if (!mounted || _isUserDragging) return;
+          setState(() {
+            _activeAnimation = 'walk_right';
+            _petOffsetX = 36.0;
+          });
+          Future.delayed(const Duration(milliseconds: 1100), () {
+            if (!mounted || _isUserDragging) return;
+            setState(() {
+              _activeAnimation = 'walk';
+              _petOffsetX = 0.0;
+            });
+            Future.delayed(const Duration(milliseconds: 900), () {
+              if (!mounted || _isUserDragging) return;
+              setState(() {
+                _activeAnimation = 'happy';
+                _petScale = 1.15;
+              });
+              Future.delayed(const Duration(milliseconds: 700), () {
+                if (!mounted) return;
+                setState(() {
+                  _petScale = 1.0;
+                  _activeAnimation = 'idle';
+                });
+                _scheduleNextAmbientAction();
+              });
+            });
+          });
+        });
+      });
+    } else if (rand == 2) {
+      // Sequence 2: Playful yarn pounce
+      setState(() {
+        _activeAnimation = 'pounce';
+        _petScale = 1.2;
+        _petOffsetX = 18.0;
+        _lastRoast = 'Pounce! 🧶 Got the invisible yarn!';
+      });
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (!mounted || _isUserDragging) return;
+        setState(() {
+          _activeAnimation = 'play';
+          _petScale = 1.0;
+          _petOffsetX = 0.0;
+        });
+        Future.delayed(const Duration(milliseconds: 2400), () {
+          if (!mounted) return;
+          setState(() => _activeAnimation = 'idle');
+          _scheduleNextAmbientAction();
+        });
+      });
+    } else if (rand == 3) {
+      // Sequence 3: Friendly cheer & wave
+      setState(() {
+        _activeAnimation = 'wave';
+        _petScale = 1.08;
+        _lastRoast = 'Checking in on you! Doing awesome ✨';
+      });
+      Future.delayed(const Duration(milliseconds: 2600), () {
+        if (!mounted || _isUserDragging) return;
+        setState(() {
+          _petScale = 1.0;
+          _activeAnimation = 'idle';
+        });
+        _scheduleNextAmbientAction();
+      });
+    } else {
+      // Sequence 4: Curious head tilt
+      setState(() {
+        _activeAnimation = 'curious';
+        _petRotation = 0.12;
+      });
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (!mounted || _isUserDragging) return;
+        setState(() => _petRotation = -0.12);
+        Future.delayed(const Duration(milliseconds: 1200), () {
+          if (!mounted || _isUserDragging) return;
+          setState(() {
+            _petRotation = 0.0;
+            _activeAnimation = 'idle';
+          });
+          _scheduleNextAmbientAction();
+        });
       });
     }
   }
@@ -54,12 +197,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _refreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) _loadStats();
     });
+    _scheduleNextAmbientAction();
   }
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
     _animResetTimer?.cancel();
+    _ambientSequenceTimer?.cancel();
     super.dispose();
   }
 
@@ -349,9 +494,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   child: Column(
                     children: [
-                      // Pet Cushion Bed & Animated Sprite Stage
+                      // Pet Cushion Bed & Animated Sprite Stage with interactive touch & drag
                       GestureDetector(
                         onTap: _pokePet,
+                        onHorizontalDragStart: (_) {
+                          _ambientSequenceTimer?.cancel();
+                          setState(() {
+                            _isUserDragging = true;
+                            _activeAnimation = 'pounce';
+                            _petScale = 1.15;
+                          });
+                        },
+                        onHorizontalDragUpdate: (details) {
+                          setState(() {
+                            _petOffsetX = (_petOffsetX + details.delta.dx).clamp(-50.0, 50.0);
+                          });
+                        },
+                        onHorizontalDragEnd: (_) {
+                          HapticFeedback.lightImpact();
+                          setState(() {
+                            _isUserDragging = false;
+                            _petOffsetX = 0.0;
+                            _petScale = 1.0;
+                            _activeAnimation = 'happy';
+                            _lastRoast = 'Wheee! Placed back on my cozy cushion! 😸';
+                          });
+                          Future.delayed(const Duration(milliseconds: 1800), () {
+                            if (mounted) setState(() => _activeAnimation = 'idle');
+                            _scheduleNextAmbientAction();
+                          });
+                        },
                         child: Stack(
                           alignment: Alignment.center,
                           clipBehavior: Clip.none,
@@ -386,14 +558,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                               ),
                             ),
-                            // Pet Animated Character Sprite
+                            // Pet Animated Character Sprite with interactive physics & motion
                             Padding(
                               padding: const EdgeInsets.only(bottom: 12),
-                              child: Image.asset(
-                                'assets/cat/animations/gifs/$_activeAnimation.gif',
-                                width: 96,
-                                height: 96,
-                                fit: BoxFit.contain,
+                              child: AnimatedSlide(
+                                offset: Offset(_petOffsetX / 96.0, 0),
+                                duration: _isUserDragging ? Duration.zero : const Duration(milliseconds: 400),
+                                curve: Curves.easeOutBack,
+                                child: AnimatedScale(
+                                  scale: _petScale,
+                                  duration: _isUserDragging ? Duration.zero : const Duration(milliseconds: 300),
+                                  curve: Curves.easeOutBack,
+                                  child: AnimatedRotation(
+                                    turns: _petRotation,
+                                    duration: const Duration(milliseconds: 300),
+                                    child: Image.asset(
+                                      'assets/cat/animations/gifs/$_activeAnimation.gif',
+                                      width: 96,
+                                      height: 96,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -485,6 +671,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Row(
                           children: [
                             _buildAnimPill('🐾 Idle', 'idle'),
+                            _buildAnimPill('🚶 Walk', 'walk'),
                             _buildAnimPill('😸 Happy', 'happy'),
                             _buildAnimPill('👋 Wave', 'wave'),
                             _buildAnimPill('🎾 Play', 'play'),
