@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../overlay_bridge.dart';
+import '../theme/botanical_theme.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback onNavigateToCalibration;
@@ -173,14 +174,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0E1116),
+      backgroundColor: BotanicalTheme.canvas,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _refreshState,
-          color: const Color(0xFFFF8C42),
+          color: BotanicalTheme.primary,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -191,55 +192,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Row(
                       children: [
                         Container(
-                          width: 44,
-                          height: 44,
+                          width: 38,
+                          height: 38,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF161B22),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFF30363D)),
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: BotanicalTheme.primary.withValues(alpha: 0.12),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: BotanicalTheme.primary.withValues(alpha: 0.05),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          padding: const EdgeInsets.all(4),
-                          child: Image.asset(
-                            'assets/cat/animations/gifs/idle.gif',
-                            fit: BoxFit.contain,
+                          child: const Icon(
+                            Icons.pets_rounded,
+                            size: 20,
+                            color: BotanicalTheme.primary,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'ScreenPet',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.2,
-                                color: Color(0xFFF0F6FC),
-                              ),
-                            ),
-                            Text(
-                              'Punch-Hole Digital Companion',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade400,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(width: 10),
+                        const Text(
+                          'ScreenPet',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                            color: BotanicalTheme.textMain,
+                          ),
                         ),
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        color: _isOverlayRunning
-                            ? const Color(0xFF3FB950).withValues(alpha: 0.15)
-                            : const Color(0xFFFF8C42).withValues(alpha: 0.15),
+                        color: BotanicalTheme.butter,
                         borderRadius: BorderRadius.circular(100),
                         border: Border.all(
-                          color: _isOverlayRunning
-                              ? const Color(0xFF3FB950).withValues(alpha: 0.4)
-                              : const Color(0xFFFF8C42).withValues(alpha: 0.4),
+                          color: BotanicalTheme.butterBorder,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: BotanicalTheme.primary.withValues(alpha: 0.04),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -250,19 +251,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: _isOverlayRunning
-                                  ? const Color(0xFF3FB950)
-                                  : const Color(0xFFFF8C42),
+                                  ? BotanicalTheme.primary
+                                  : const Color(0xFFC47B2B),
                             ),
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            _isOverlayRunning ? 'Active on Notch' : 'Tracking in BG',
+                            _isOverlayRunning ? 'ACTIVE' : 'BG TRACKING',
                             style: TextStyle(
                               fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
                               color: _isOverlayRunning
-                                  ? const Color(0xFF3FB950)
-                                  : const Color(0xFFFF8C42),
+                                  ? BotanicalTheme.primary
+                                  : const Color(0xFF8A5214),
                             ),
                           ),
                         ],
@@ -271,7 +273,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // Permission Warning Banner (if missing)
                 if (!_hasPermission) ...[
@@ -279,21 +281,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF261919),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFF85149)),
+                      color: const Color(0xFFFFF0ED),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFFFB4A9)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Row(
                           children: [
-                            Icon(Icons.warning_amber_rounded, color: Color(0xFFF85149), size: 20),
+                            Icon(Icons.warning_amber_rounded,
+                                color: Color(0xFFBA1A1A), size: 20),
                             SizedBox(width: 8),
                             Text(
                               'Overlay Permission Required',
                               style: TextStyle(
-                                color: Color(0xFFF85149),
+                                color: Color(0xFFBA1A1A),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                               ),
@@ -303,7 +306,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 6),
                         const Text(
                           'ScreenPet needs system overlay access to draw the companion flush next to your front camera cutout across all apps.',
-                          style: TextStyle(fontSize: 12, color: Color(0xFF8B949E), height: 1.4),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF410002),
+                            height: 1.4,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         ElevatedButton.icon(
@@ -315,79 +322,161 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           icon: const Icon(Icons.settings, size: 16),
                           label: const Text('Grant Overlay Access'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF85149),
+                            backgroundColor: const Color(0xFFBA1A1A),
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(100),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                 ],
 
-                // Hero Pet Controller Card
+                // 1. Top Companion Stage Card
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(22),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFF30363D)),
+                    color: BotanicalTheme.surface,
+                    borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
+                    border: Border.all(
+                      color: BotanicalTheme.outline.withValues(alpha: 0.5),
+                    ),
+                    boxShadow: BotanicalTheme.cardShadow,
                   ),
                   child: Column(
                     children: [
-                      // Interactive Animated Pet Avatar Display
+                      // Pet Cushion Bed & Animated Sprite Stage
                       GestureDetector(
                         onTap: _pokePet,
                         child: Stack(
                           alignment: Alignment.center,
+                          clipBehavior: Clip.none,
                           children: [
-                            Container(
-                              width: 110,
-                              height: 110,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [
-                                    const Color(0xFFFF8C42).withValues(alpha: 0.25),
-                                    Colors.transparent,
-                                  ],
+                            // Gentle floating snooze puffs if companion is resting
+                            if (!_isOverlayRunning)
+                              const Positioned(
+                                top: -6,
+                                right: -4,
+                                child: Text(
+                                  'z Z z',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: BotanicalTheme.textMuted,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            // Soft Butter sleeping cushion pad
+                            Positioned(
+                              bottom: 4,
+                              child: Container(
+                                width: 140,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: BotanicalTheme.butter,
+                                  borderRadius: BorderRadius.circular(100),
+                                  border: Border.all(
+                                    color: BotanicalTheme.butterBorder.withValues(alpha: 0.7),
+                                  ),
                                 ),
                               ),
                             ),
-                            Image.asset(
-                              'assets/cat/animations/gifs/$_activeAnimation.gif',
-                              width: 86,
-                              height: 86,
-                              fit: BoxFit.contain,
+                            // Pet Animated Character Sprite
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Image.asset(
+                                'assets/cat/animations/gifs/$_activeAnimation.gif',
+                                width: 96,
+                                height: 96,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       const Text(
                         'Playful Cat Companion',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFF0F6FC),
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
+                          color: BotanicalTheme.textMain,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _isOverlayRunning
                             ? 'Floating beside your front camera. Time and unlocks update live every second.'
-                            : 'Companion is dismissed from notch, but habit tracking continues in background. Tap below to show it on camera.',
+                            : 'Companion is resting. Tap below to spawn it by your punch-hole.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF8B949E),
+                          color: BotanicalTheme.textMuted,
                           height: 1.4,
                         ),
                       ),
+                      const SizedBox(height: 16),
+
+                      // Spawn / Dismiss Primary CTA Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          onPressed: _toggleOverlay,
+                          icon: Icon(
+                            _isOverlayRunning
+                                ? Icons.pause_circle_rounded
+                                : Icons.play_arrow_rounded,
+                            size: 20,
+                          ),
+                          label: Text(
+                            _isOverlayRunning
+                                ? 'Dismiss Screen Pet'
+                                : 'Spawn Screen Pet',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: BotanicalTheme.primary,
+                            foregroundColor: BotanicalTheme.onPrimary,
+                            elevation: 2,
+                            shadowColor: BotanicalTheme.primary.withValues(alpha: 0.3),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_isOverlayRunning) ...[
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 44,
+                          child: OutlinedButton.icon(
+                            onPressed: _pokePet,
+                            icon: const Icon(Icons.touch_app_rounded, size: 17),
+                            label: const Text('Poke Pet (Roast & Animation)'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: BotanicalTheme.primary,
+                              side: BorderSide(
+                                color: BotanicalTheme.primary.withValues(alpha: 0.3),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 14),
 
                       // Animation Selector Pills
@@ -405,208 +494,188 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 18),
-
-                      // Spawn / Dismiss Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: _toggleOverlay,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _isOverlayRunning
-                                ? const Color(0xFF21262D)
-                                : const Color(0xFFFF8C42),
-                            foregroundColor: _isOverlayRunning
-                                ? const Color(0xFFF85149)
-                                : Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: _isOverlayRunning
-                                  ? const BorderSide(color: Color(0xFF30363D))
-                                  : BorderSide.none,
-                            ),
-                          ),
-                          child: Text(
-                            _isOverlayRunning ? 'Dismiss Screen Pet' : 'Spawn Screen Pet',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_isOverlayRunning) ...[
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 46,
-                          child: OutlinedButton.icon(
-                            onPressed: _pokePet,
-                            icon: const Icon(Icons.touch_app_rounded, size: 18),
-                            label: const Text('Poke Pet (Roast & Animation)'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFFFF8C42),
-                              side: const BorderSide(color: Color(0xFFFF8C42)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 14),
 
-                // Sarcastic Pet Dialogue Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFF30363D)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF8C42).withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Text('💬', style: TextStyle(fontSize: 18)),
+                // 2. Pet Dialogue & Roast Card (Soft Butter Pod)
+                InkWell(
+                  onTap: _pokePet,
+                  borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+                    decoration: BoxDecoration(
+                      color: BotanicalTheme.butter,
+                      borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
+                      border: Border.all(
+                        color: BotanicalTheme.butterBorder.withValues(alpha: 0.8),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      boxShadow: BotanicalTheme.cardShadow,
+                    ),
+                    child: Column(
+                      children: [
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text(
+                            Icon(
+                              Icons.chat_bubble_rounded,
+                              size: 15,
+                              color: BotanicalTheme.primary,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
                               'PET DIALOGUE & ROAST',
                               style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
                                 letterSpacing: 0.8,
-                                color: Color(0xFF6E7681),
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              '"$_lastRoast"',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFFF0F6FC),
-                                fontStyle: FontStyle.italic,
+                                color: BotanicalTheme.primary,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                        Text(
+                          '"$_lastRoast"',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: BotanicalTheme.textMain,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 18),
 
-                // Today's Habit Statistics Section
-                const Text(
-                  'TODAY\'S SCREEN HABITS',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                    color: Color(0xFF6E7681),
+                // 3. Screen Habits Section
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    'TODAY\'S SCREEN HABITS',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                      color: BotanicalTheme.textMain,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
 
-                // 2-Card Habit Metrics Grid
+                // 2-Column Game Stat Cards
                 Row(
                   children: [
                     // Screen Time Card
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.all(18),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF161B22),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFF30363D)),
+                          color: BotanicalTheme.surface,
+                          borderRadius: BorderRadius.circular(BotanicalTheme.radiusLg),
+                          border: Border.all(
+                            color: BotanicalTheme.outline.withValues(alpha: 0.5),
+                          ),
+                          boxShadow: BotanicalTheme.cardShadow,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Row(
                               children: [
-                                Text('⏱', style: TextStyle(fontSize: 16)),
+                                Icon(Icons.timer_outlined,
+                                    size: 17, color: BotanicalTheme.primary),
                                 SizedBox(width: 6),
                                 Text(
                                   'Screen-On',
-                                  style: TextStyle(fontSize: 12, color: Color(0xFF8B949E)),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: BotanicalTheme.textMain,
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 8),
                             Text(
                               _screenTimeFormatted,
                               style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFFFF8C42),
+                                fontSize: 19,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5,
+                                color: BotanicalTheme.textMain,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 2),
                             const Text(
                               'Active usage today',
-                              style: TextStyle(fontSize: 11, color: Color(0xFF6E7681)),
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: BotanicalTheme.textMuted,
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
 
                     // Unlocks Card
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.all(18),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF161B22),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFF30363D)),
+                          color: BotanicalTheme.surface,
+                          borderRadius: BorderRadius.circular(BotanicalTheme.radiusLg),
+                          border: Border.all(
+                            color: BotanicalTheme.outline.withValues(alpha: 0.5),
+                          ),
+                          boxShadow: BotanicalTheme.cardShadow,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Row(
                               children: [
-                                Text('🔓', style: TextStyle(fontSize: 16)),
+                                Icon(Icons.lock_open_rounded,
+                                    size: 17, color: BotanicalTheme.primary),
                                 SizedBox(width: 6),
                                 Text(
                                   'Unlocks',
-                                  style: TextStyle(fontSize: 12, color: Color(0xFF8B949E)),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: BotanicalTheme.textMain,
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 8),
                             Text(
                               '$_unlockCount',
                               style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFFF0F6FC),
+                                fontSize: 19,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5,
+                                color: BotanicalTheme.textMain,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 2),
                             const Text(
                               'Phone pickups',
-                              style: TextStyle(fontSize: 11, color: Color(0xFF6E7681)),
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: BotanicalTheme.textMuted,
+                              ),
                             ),
                           ],
                         ),
@@ -618,43 +687,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.schedule_rounded, size: 13, color: Color(0xFF6E7681)),
+                    Icon(Icons.schedule_rounded,
+                        size: 13, color: BotanicalTheme.textMuted),
                     SizedBox(width: 5),
                     Text(
                       'Resets daily after 12:00 AM (Midnight) like a clock',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF6E7681), fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: BotanicalTheme.textMuted,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
-                // Quick Calibration Callout Card
+                // 4. Punch-Hole Alignment Navigation Card
                 InkWell(
                   onTap: widget.onNavigateToCalibration,
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(BotanicalTheme.radiusLg),
                   child: Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF21262D).withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFF30363D)),
+                      color: BotanicalTheme.surface,
+                      borderRadius: BorderRadius.circular(BotanicalTheme.radiusLg),
+                      border: Border.all(
+                        color: BotanicalTheme.outline.withValues(alpha: 0.5),
+                      ),
+                      boxShadow: BotanicalTheme.cardShadow,
                     ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFF8C42).withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
+                            color: BotanicalTheme.butter,
+                            borderRadius: BorderRadius.circular(14),
                           ),
                           child: const Icon(
                             Icons.tune_rounded,
-                            color: Color(0xFFFF8C42),
+                            color: BotanicalTheme.primary,
                             size: 20,
                           ),
                         ),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: 12),
                         const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -662,25 +740,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Text(
                                 'Punch-Hole Alignment',
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 14.5,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFFF0F6FC),
+                                  color: BotanicalTheme.textMain,
                                 ),
                               ),
-                              SizedBox(height: 2),
+                              SizedBox(height: 1),
                               Text(
                                 'Adjust X/Y sliders or snap to camera notch',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  color: Color(0xFF8B949E),
+                                  fontSize: 12,
+                                  color: BotanicalTheme.textMuted,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(
-                          Icons.chevron_right_rounded,
-                          color: Color(0xFF8B949E),
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: const BoxDecoration(
+                            color: BotanicalTheme.canvas,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_rounded,
+                            color: BotanicalTheme.primary,
+                            size: 16,
+                          ),
                         ),
                       ],
                     ),
@@ -697,30 +784,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildAnimPill(String label, String animKey) {
     final isSelected = _activeAnimation == animKey;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 3),
       child: InkWell(
         onTap: () {
           HapticFeedback.selectionClick();
           _triggerPetAnimation(animKey);
         },
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(100),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFFFF8C42).withValues(alpha: 0.2)
-                : const Color(0xFF21262D),
-            borderRadius: BorderRadius.circular(20),
+                ? BotanicalTheme.butter
+                : BotanicalTheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(100),
             border: Border.all(
-              color: isSelected ? const Color(0xFFFF8C42) : const Color(0xFF30363D),
+              color: isSelected
+                  ? BotanicalTheme.butterBorder
+                  : BotanicalTheme.outline.withValues(alpha: 0.6),
             ),
           ),
           child: Text(
             label,
             style: TextStyle(
               fontSize: 11,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? const Color(0xFFFF8C42) : const Color(0xFFC9D1D9),
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+              color: BotanicalTheme.textMain,
             ),
           ),
         ),

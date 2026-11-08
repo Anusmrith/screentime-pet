@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'theme/botanical_theme.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/calibration_screen.dart';
 import 'screens/wardrobe_screen.dart';
@@ -9,9 +10,9 @@ void main() {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFF0E1116),
-      systemNavigationBarIconBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: BotanicalTheme.canvas,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
   runApp(const ScreenPetApp());
@@ -25,17 +26,7 @@ class ScreenPetApp extends StatelessWidget {
     return MaterialApp(
       title: 'ScreenPet',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0E1116),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFFF8C42),
-          secondary: Color(0xFF3FB950),
-          surface: Color(0xFF161B22),
-          error: Color(0xFFF85149),
-        ),
-      ),
+      theme: BotanicalTheme.themeData,
       home: const MainNavigationScreen(),
     );
   }
@@ -56,6 +47,56 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     setState(() => _currentIndex = index);
   }
 
+  Widget _buildTabItem(int index, IconData icon, String label) {
+    final isSelected = _currentIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _navigateToIndex(index),
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? BotanicalTheme.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(100),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: BotanicalTheme.primary.withValues(alpha: 0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected
+                    ? BotanicalTheme.onPrimary
+                    : BotanicalTheme.primary.withValues(alpha: 0.6),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                  color: isSelected
+                      ? BotanicalTheme.onPrimary
+                      : BotanicalTheme.primary.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screens = [
@@ -71,36 +112,26 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         index: _currentIndex,
         children: screens,
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(color: Color(0xFF21262D), width: 1),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(18, 0, 18, 12),
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.96),
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(
+              color: BotanicalTheme.primary.withValues(alpha: 0.08),
+            ),
+            boxShadow: BotanicalTheme.floatingTrayShadow,
           ),
-        ),
-        child: NavigationBar(
-          selectedIndex: _currentIndex,
-          onDestinationSelected: _navigateToIndex,
-          backgroundColor: const Color(0xFF161B22),
-          indicatorColor: const Color(0xFFFF8C42).withValues(alpha: 0.18),
-          elevation: 0,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined),
-              selectedIcon: Icon(Icons.dashboard_rounded, color: Color(0xFFFF8C42)),
-              label: 'Dashboard',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.tune_outlined),
-              selectedIcon: Icon(Icons.tune_rounded, color: Color(0xFFFF8C42)),
-              label: 'Calibration',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.pets_outlined),
-              selectedIcon: Icon(Icons.pets_rounded, color: Color(0xFFFF8C42)),
-              label: 'Wardrobe',
-            ),
-          ],
+          child: Row(
+            children: [
+              _buildTabItem(0, Icons.auto_awesome_rounded, 'Dashboard'),
+              _buildTabItem(1, Icons.tune_rounded, 'Calibration'),
+              _buildTabItem(2, Icons.pets_rounded, 'Wardrobe'),
+            ],
+          ),
         ),
       ),
     );

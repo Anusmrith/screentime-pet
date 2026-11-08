@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../overlay_bridge.dart';
+import '../theme/botanical_theme.dart';
 
 class CalibrationScreen extends StatefulWidget {
   const CalibrationScreen({super.key});
@@ -91,137 +92,288 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Color(0xFF0E1116),
+        backgroundColor: BotanicalTheme.canvas,
         body: Center(
-          child: CircularProgressIndicator(color: Color(0xFFFF8C42)),
+          child: CircularProgressIndicator(color: BotanicalTheme.primary),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0E1116),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0E1116),
-        elevation: 0,
-        title: const Text(
-          'Punch-Hole Calibration',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFFF0F6FC),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFFFF8C42)),
-            tooltip: 'Reset Defaults',
-            onPressed: _resetToCenter,
-          ),
-        ],
-      ),
+      backgroundColor: BotanicalTheme.canvas,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Visual Punch-Hole Simulation Preview Box
+              // Top Header Card Banner
               Container(
                 width: double.infinity,
-                height: 120,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF161B22),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF30363D)),
+                  color: BotanicalTheme.surface,
+                  borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
+                  border: Border.all(
+                    color: BotanicalTheme.outline.withValues(alpha: 0.5),
+                  ),
+                  boxShadow: BotanicalTheme.cardShadow,
                 ),
-                child: Stack(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Simulated Front Camera Punch-Hole Ring (Center)
-                    Align(
-                      alignment: const Alignment(0.0, -0.6),
-                      child: Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.black,
-                          border: Border.all(color: const Color(0x40FFFFFF), width: 1.5),
-                        ),
-                      ),
-                    ),
-
-                    // Live Moving Pet Simulation with companion stats pill
-                    Align(
-                      alignment: Alignment(
-                        ((_xPercent / 50.0) - 1.0).clamp(-1.0, 1.0),
-                        ((_yDp / 40.0) - 0.7).clamp(-1.0, 1.0),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: _sizeDp.toDouble(),
-                            height: _sizeDp.toDouble(),
-                            padding: const EdgeInsets.all(2),
-                            child: Image.asset(
-                              'assets/cat/animations/gifs/idle.gif',
-                              fit: BoxFit.contain,
-                            ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: BotanicalTheme.butter,
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          const SizedBox(width: 3),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xE6161B22),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0x40FFFFFF)),
-                            ),
-                            child: const Text(
-                              '0m 15s • 3 🔓',
+                          child: const Icon(
+                            Icons.tune_rounded,
+                            color: BotanicalTheme.primary,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Punch-Hole Calibration',
                               style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFFF0F6FC),
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
+                                color: BotanicalTheme.textMain,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
+                            SizedBox(height: 1),
+                            Text(
+                              'Align your pet around camera lens',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: BotanicalTheme.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-
-                    // Instruction pill at bottom of preview
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF21262D).withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: const Text(
-                          'Live preview: pet moves on your phone status bar as you drag',
-                          style: TextStyle(fontSize: 10, color: Color(0xFF8B949E)),
-                        ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh_rounded, color: BotanicalTheme.primary),
+                      tooltip: 'Reset Defaults',
+                      onPressed: _resetToCenter,
+                      style: IconButton.styleFrom(
+                        backgroundColor: BotanicalTheme.canvas,
+                        shape: const CircleBorder(),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
 
-              // Sliders Card Container
+              // Live Notch Simulator Card
               Container(
-                padding: const EdgeInsets.all(20),
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF161B22),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFF30363D)),
+                  color: BotanicalTheme.surface,
+                  borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
+                  border: Border.all(
+                    color: BotanicalTheme.outline.withValues(alpha: 0.5),
+                  ),
+                  boxShadow: BotanicalTheme.cardShadow,
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 7,
+                              height: 7,
+                              decoration: const BoxDecoration(
+                                color: BotanicalTheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'LIVE NOTCH SIMULATOR',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                                color: BotanicalTheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: BotanicalTheme.butter,
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(
+                              color: BotanicalTheme.butterBorder,
+                            ),
+                          ),
+                          child: const Text(
+                            'Hardware Overlay v1.4',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: BotanicalTheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Dark Viewport in Deep Forest Evergreen
+                    Container(
+                      width: double.infinity,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        color: BotanicalTheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x33000000),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        children: [
+                          // Simulated Camera Cutout Ring
+                          Align(
+                            alignment: const Alignment(0.0, -0.6),
+                            child: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.black,
+                                border: Border.all(
+                                  color: BotanicalTheme.butter.withValues(alpha: 0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Live Moving Animated Pet Preview with soft butter pill
+                          Align(
+                            alignment: Alignment(
+                              ((_xPercent / 50.0) - 1.0).clamp(-1.0, 1.0),
+                              ((_yDp / 40.0) - 0.7).clamp(-1.0, 1.0),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: _sizeDp.toDouble(),
+                                  height: _sizeDp.toDouble(),
+                                  padding: const EdgeInsets.all(2),
+                                  child: Image.asset(
+                                    'assets/cat/animations/gifs/idle.gif',
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: BotanicalTheme.butter,
+                                    borderRadius: BorderRadius.circular(100),
+                                    border: Border.all(color: BotanicalTheme.butterBorder),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x20000000),
+                                        blurRadius: 4,
+                                        offset: Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Text(
+                                    '0m 15s • 3 🔓',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: BotanicalTheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.info_outline_rounded,
+                            size: 14, color: BotanicalTheme.textMuted),
+                        SizedBox(width: 5),
+                        Text(
+                          'Live preview: pet moves on your phone status bar as you drag',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: BotanicalTheme.textMuted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // Precision Alignment Card
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: BotanicalTheme.surface,
+                  borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
+                  border: Border.all(
+                    color: BotanicalTheme.outline.withValues(alpha: 0.5),
+                  ),
+                  boxShadow: BotanicalTheme.cardShadow,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.tune_rounded, size: 19, color: BotanicalTheme.primary),
+                        SizedBox(width: 8),
+                        Text(
+                          'Precision Alignment',
+                          style: TextStyle(
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                            color: BotanicalTheme.textMain,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
                     // Slider 1: Horizontal Position (X %)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -230,26 +382,36 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                           'Horizontal Position (X %)',
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFFF0F6FC),
+                            fontWeight: FontWeight.w700,
+                            color: BotanicalTheme.textMain,
                           ),
                         ),
-                        Text(
-                          '${_xPercent.round()}%',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFFF8C42),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: BotanicalTheme.butter,
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(color: BotanicalTheme.butterBorder),
+                          ),
+                          child: Text(
+                            '${_xPercent.round()}%',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: BotanicalTheme.primary,
+                            ),
                           ),
                         ),
                       ],
                     ),
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: const Color(0xFFFF8C42),
-                        inactiveTrackColor: const Color(0xFF21262D),
-                        thumbColor: const Color(0xFFFF8C42),
-                        overlayColor: const Color(0xFFFF8C42).withValues(alpha: 0.2),
+                        activeTrackColor: BotanicalTheme.primary,
+                        inactiveTrackColor: BotanicalTheme.surfaceContainer,
+                        thumbColor: BotanicalTheme.primary,
+                        overlayColor: BotanicalTheme.primary.withValues(alpha: 0.15),
+                        trackHeight: 6,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
                       ),
                       child: Slider(
                         value: _xPercent,
@@ -263,7 +425,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     // Slider 2: Vertical Offset (Y dp)
                     Row(
@@ -273,26 +435,36 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                           'Vertical Offset (Y dp)',
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFFF0F6FC),
+                            fontWeight: FontWeight.w700,
+                            color: BotanicalTheme.textMain,
                           ),
                         ),
-                        Text(
-                          '$_yDp dp',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFFF8C42),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: BotanicalTheme.butter,
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(color: BotanicalTheme.butterBorder),
+                          ),
+                          child: Text(
+                            '$_yDp dp',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: BotanicalTheme.primary,
+                            ),
                           ),
                         ),
                       ],
                     ),
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: const Color(0xFFFF8C42),
-                        inactiveTrackColor: const Color(0xFF21262D),
-                        thumbColor: const Color(0xFFFF8C42),
-                        overlayColor: const Color(0xFFFF8C42).withValues(alpha: 0.2),
+                        activeTrackColor: BotanicalTheme.primary,
+                        inactiveTrackColor: BotanicalTheme.surfaceContainer,
+                        thumbColor: BotanicalTheme.primary,
+                        overlayColor: BotanicalTheme.primary.withValues(alpha: 0.15),
+                        trackHeight: 6,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
                       ),
                       child: Slider(
                         value: _yDp.toDouble(),
@@ -306,7 +478,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     // Slider 3: Pet Size (dp)
                     Row(
@@ -316,26 +488,36 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                           'Pet Size (dp)',
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFFF0F6FC),
+                            fontWeight: FontWeight.w700,
+                            color: BotanicalTheme.textMain,
                           ),
                         ),
-                        Text(
-                          '$_sizeDp dp',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFFF8C42),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: BotanicalTheme.butter,
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(color: BotanicalTheme.butterBorder),
+                          ),
+                          child: Text(
+                            '$_sizeDp dp',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: BotanicalTheme.primary,
+                            ),
                           ),
                         ),
                       ],
                     ),
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: const Color(0xFFFF8C42),
-                        inactiveTrackColor: const Color(0xFF21262D),
-                        thumbColor: const Color(0xFFFF8C42),
-                        overlayColor: const Color(0xFFFF8C42).withValues(alpha: 0.2),
+                        activeTrackColor: BotanicalTheme.primary,
+                        inactiveTrackColor: BotanicalTheme.surfaceContainer,
+                        thumbColor: BotanicalTheme.primary,
+                        overlayColor: BotanicalTheme.primary.withValues(alpha: 0.15),
+                        trackHeight: 6,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
                       ),
                       child: Slider(
                         value: _sizeDp.toDouble(),
@@ -349,51 +531,53 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
                     // Reset and Cutout Detection Buttons
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton(
+                          child: OutlinedButton.icon(
                             onPressed: _resetToCenter,
+                            icon: const Icon(Icons.restart_alt_rounded, size: 16),
+                            label: const Text('Reset Defaults'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF8B949E),
-                              side: const BorderSide(color: Color(0xFF30363D)),
+                              foregroundColor: BotanicalTheme.primary,
+                              side: const BorderSide(color: BotanicalTheme.primary, width: 1.5),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(100),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
-                            child: const Text('Reset Defaults'),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: ElevatedButton(
+                          child: ElevatedButton.icon(
                             onPressed: _snapToCutout,
+                            icon: const Icon(Icons.adjust_rounded, size: 16),
+                            label: const Text('Snap to Cutout'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF21262D),
-                              foregroundColor: const Color(0xFFFF8C42),
-                              elevation: 0,
+                              backgroundColor: BotanicalTheme.butter,
+                              foregroundColor: BotanicalTheme.primary,
+                              elevation: 1,
+                              side: const BorderSide(color: BotanicalTheme.primary, width: 1.5),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                                side: const BorderSide(color: Color(0xFFFF8C42), width: 0.8),
+                                borderRadius: BorderRadius.circular(100),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
-                            child: const Text('Snap to Cutout'),
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
 
                     // Test Poke & Animation on Status Bar
                     SizedBox(
                       width: double.infinity,
-                      child: OutlinedButton.icon(
+                      child: ElevatedButton.icon(
                         onPressed: () async {
                           HapticFeedback.lightImpact();
                           final roast = await OverlayBridge.pokePet();
@@ -408,26 +592,35 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                                   Expanded(
                                     child: Text(
                                       roast ?? 'Pet animated on status bar!',
-                                      style: const TextStyle(fontSize: 12, color: Color(0xFFF0F6FC)),
+                                      style: const TextStyle(
+                                        fontSize: 12.5,
+                                        color: BotanicalTheme.textMain,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                               behavior: SnackBarBehavior.floating,
-                              backgroundColor: const Color(0xFF161B22),
+                              backgroundColor: BotanicalTheme.butter,
                               duration: const Duration(seconds: 2),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: const BorderSide(color: BotanicalTheme.butterBorder),
+                              ),
                             ),
                           );
                         },
-                        icon: const Icon(Icons.touch_app_rounded, size: 16),
+                        icon: const Icon(Icons.smart_toy_outlined, size: 17),
                         label: const Text('Test Pet Animation & Roast'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFFF8C42),
-                          side: const BorderSide(color: Color(0xFFFF8C42), width: 0.8),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: BotanicalTheme.primary,
+                          foregroundColor: BotanicalTheme.onPrimary,
+                          elevation: 2,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(100),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                       ),
                     ),
@@ -435,28 +628,55 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
 
               // Interactive Touch Tip Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF161B22),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: const Color(0xFF30363D)),
+                  color: BotanicalTheme.surface,
+                  borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
+                  border: Border.all(
+                    color: BotanicalTheme.outline.withValues(alpha: 0.5),
+                  ),
+                  boxShadow: BotanicalTheme.cardShadow,
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Text('👆', style: TextStyle(fontSize: 22)),
-                    SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        'Direct Drag: You can also drag the pet with your finger directly on your phone\'s status bar to position it!',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF8B949E),
-                          height: 1.4,
-                        ),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: BotanicalTheme.butter,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Center(
+                        child: Text('👆', style: TextStyle(fontSize: 20)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Direct Drag',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: BotanicalTheme.textMain,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'You can also drag the pet with your finger directly on your phone\'s status bar to position it!',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: BotanicalTheme.textMuted,
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
