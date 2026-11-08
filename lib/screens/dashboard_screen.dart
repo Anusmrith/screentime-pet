@@ -181,7 +181,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           color: BotanicalTheme.primary,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -686,16 +686,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 8),
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.schedule_rounded,
                         size: 13, color: BotanicalTheme.textMuted),
                     SizedBox(width: 5),
-                    Text(
-                      'Resets daily after 12:00 AM (Midnight) like a clock',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: BotanicalTheme.textMuted,
-                        fontWeight: FontWeight.w500,
+                    Flexible(
+                      child: Text(
+                        'Resets daily after 12:00 AM (Midnight) like a clock',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: BotanicalTheme.textMuted,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],

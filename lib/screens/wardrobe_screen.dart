@@ -53,7 +53,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
       backgroundColor: BotanicalTheme.canvas,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -61,28 +61,35 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Pet Wardrobe & Skins',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3,
-                          color: BotanicalTheme.textMain,
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Pet Wardrobe & Skins',
+                          style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                            color: BotanicalTheme.textMain,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      SizedBox(height: 1),
-                      Text(
-                        'Custom companion skins & outfits',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: BotanicalTheme.textMuted,
+                        SizedBox(height: 1),
+                        Text(
+                          'Custom companion skins & outfits',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: BotanicalTheme.textMuted,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(

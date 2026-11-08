@@ -163,7 +163,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
       backgroundColor: BotanicalTheme.canvas,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -180,48 +180,57 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                   boxShadow: BotanicalTheme.cardShadow,
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: BotanicalTheme.butter,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(
-                            Icons.tune_rounded,
-                            color: BotanicalTheme.primary,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Punch-Hole Calibration',
-                              style: TextStyle(
-                                fontSize: 16.5,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.3,
-                                color: BotanicalTheme.textMain,
-                              ),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: BotanicalTheme.butter,
+                              borderRadius: BorderRadius.circular(14),
                             ),
-                            SizedBox(height: 1),
-                            Text(
-                              'Align your pet around camera lens',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: BotanicalTheme.textMuted,
-                              ),
+                            child: const Icon(
+                              Icons.tune_rounded,
+                              color: BotanicalTheme.primary,
+                              size: 22,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Punch-Hole Calibration',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.3,
+                                    color: BotanicalTheme.textMain,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(height: 1),
+                                Text(
+                                  'Align your pet around camera lens',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: BotanicalTheme.textMuted,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(Icons.refresh_rounded, color: BotanicalTheme.primary),
                       tooltip: 'Reset Defaults',
@@ -251,10 +260,14 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                 ),
                 child: Column(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 6,
                       children: [
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
                               width: 7,
@@ -265,13 +278,18 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                               ),
                             ),
                             const SizedBox(width: 6),
-                            const Text(
-                              'LIVE NOTCH SIMULATOR',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.8,
-                                color: BotanicalTheme.primary,
+                            const Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'LIVE NOTCH SIMULATOR',
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.8,
+                                    color: BotanicalTheme.primary,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -285,12 +303,15 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                               color: BotanicalTheme.butterBorder,
                             ),
                           ),
-                          child: const Text(
-                            'Hardware Overlay v1.4',
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.bold,
-                              color: BotanicalTheme.primary,
+                          child: const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'Hardware Overlay v1.4',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: BotanicalTheme.primary,
+                              ),
                             ),
                           ),
                         ),
@@ -388,16 +409,23 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                     const SizedBox(height: 10),
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Icon(Icons.info_outline_rounded,
-                            size: 14, color: BotanicalTheme.textMuted),
-                        SizedBox(width: 5),
-                        Text(
-                          'Live preview: pet moves on your phone status bar as you drag',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: BotanicalTheme.textMuted,
-                            fontWeight: FontWeight.w500,
+                        Icon(
+                          Icons.info_outline_rounded,
+                          size: 14,
+                          color: BotanicalTheme.textMuted,
+                        ),
+                        SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'Live preview: pet moves on your phone status bar as you drag',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: BotanicalTheme.textMuted,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ],
@@ -426,13 +454,15 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                       children: [
                         Icon(Icons.tune_rounded, size: 19, color: BotanicalTheme.primary),
                         SizedBox(width: 8),
-                        Text(
-                          'Precision Alignment',
-                          style: TextStyle(
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.2,
-                            color: BotanicalTheme.textMain,
+                        Expanded(
+                          child: Text(
+                            'Precision Alignment',
+                            style: TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                              color: BotanicalTheme.textMain,
+                            ),
                           ),
                         ),
                       ],
@@ -443,14 +473,19 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Horizontal Position (X %)',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: BotanicalTheme.textMain,
+                        const Expanded(
+                          child: Text(
+                            'Horizontal Position (X %)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: BotanicalTheme.textMain,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(
@@ -499,14 +534,19 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Vertical Offset (Y dp)',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: BotanicalTheme.textMain,
+                        const Expanded(
+                          child: Text(
+                            'Vertical Offset (Y dp)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: BotanicalTheme.textMain,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(
@@ -555,14 +595,19 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Pet Size (dp)',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: BotanicalTheme.textMain,
+                        const Expanded(
+                          child: Text(
+                            'Pet Size (dp)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: BotanicalTheme.textMain,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(
@@ -611,26 +656,41 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton.icon(
+                          child: OutlinedButton(
                             onPressed: _resetToCenter,
-                            icon: const Icon(Icons.restart_alt_rounded, size: 16),
-                            label: const Text('Reset Defaults'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: BotanicalTheme.primary,
                               side: const BorderSide(color: BotanicalTheme.primary, width: 1.5),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(100),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.restart_alt_rounded, size: 16),
+                                SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    'Reset Defaults',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: ElevatedButton.icon(
+                          child: ElevatedButton(
                             onPressed: _snapToCutout,
-                            icon: const Icon(Icons.adjust_rounded, size: 16),
-                            label: const Text('Snap to Cutout'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: BotanicalTheme.butter,
                               foregroundColor: BotanicalTheme.primary,
@@ -639,7 +699,26 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(100),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.adjust_rounded, size: 16),
+                                SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    'Snap to Cutout',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -651,7 +730,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                     // Test Poke & Animation on Status Bar
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton.icon(
+                      child: ElevatedButton(
                         onPressed: () async {
                           HapticFeedback.lightImpact();
                           final roast = await OverlayBridge.pokePet();
@@ -685,8 +764,6 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                             ),
                           );
                         },
-                        icon: const Icon(Icons.smart_toy_outlined, size: 17),
-                        label: const Text('Test Pet Animation & Roast'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: BotanicalTheme.primary,
                           foregroundColor: BotanicalTheme.onPrimary,
@@ -694,7 +771,26 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(100),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.smart_toy_outlined, size: 17),
+                            SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                'Test Pet Animation & Roast',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

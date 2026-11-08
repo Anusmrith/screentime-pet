@@ -109,15 +109,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     ? BotanicalTheme.onPrimary
                     : BotanicalTheme.primary.withValues(alpha: 0.6),
               ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                  color: isSelected
-                      ? BotanicalTheme.onPrimary
-                      : BotanicalTheme.primary.withValues(alpha: 0.6),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                    color: isSelected
+                        ? BotanicalTheme.onPrimary
+                        : BotanicalTheme.primary.withValues(alpha: 0.6),
+                  ),
                 ),
               ),
             ],
