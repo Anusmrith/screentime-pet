@@ -18,14 +18,46 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
       SnackBar(
         content: Row(
           children: [
-            const Text('🔒', style: TextStyle(fontSize: 16)),
+            const Icon(Icons.lock_rounded, size: 18, color: BotanicalTheme.primary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 skinName != null
-                    ? '$skinName is coming soon! 🐾 Stay tuned!'
-                    : 'Wardrobe is coming soon! 🐾 Stay tuned for cozy seasonal outfits!',
+                    ? '$skinName is coming soon! Stay tuned!'
+                    : 'Wardrobe is coming soon! Stay tuned for cozy seasonal outfits!',
                 style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: BotanicalTheme.textMain,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: BotanicalTheme.butter,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: BotanicalTheme.butterBorder),
+        ),
+      ),
+    );
+  }
+
+  void _showActiveCatToast() {
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.pets_rounded, size: 18, color: BotanicalTheme.primary),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Playful Cat is currently active on your screen!',
+                style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                   color: BotanicalTheme.textMain,
@@ -106,7 +138,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                     ),
                     child: const Row(
                       children: [
-                        Text('🔒', style: TextStyle(fontSize: 11)),
+                        Icon(Icons.lock_rounded, size: 12, color: BotanicalTheme.primary),
                         SizedBox(width: 4),
                         Text(
                           'Locked',
@@ -147,7 +179,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Center(
-                          child: Text('🔒', style: TextStyle(fontSize: 24)),
+                          child: Icon(Icons.lock_rounded, size: 24, color: BotanicalTheme.primary),
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -186,7 +218,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4),
                 child: Text(
-                  'UPCOMING SKINS PREVIEW',
+                  'COMPANION SKINS',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
@@ -198,7 +230,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
               const SizedBox(height: 8),
 
-              // Grid of Locked Pet Skins
+              // Grid of Pet Skins (Playful Cat highlighted; other skins previewed)
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -211,63 +243,90 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                 itemCount: skins.length,
                 itemBuilder: (context, index) {
                   final skin = skins[index];
+                  final isCurrentCat = skin.id == 'cat';
 
                   return InkWell(
-                    onTap: () => _showComingSoonToast(skin.name),
+                    onTap: () => isCurrentCat
+                        ? _showActiveCatToast()
+                        : _showComingSoonToast(skin.name),
                     borderRadius: BorderRadius.circular(BotanicalTheme.radiusLg),
                     child: Container(
                       decoration: BoxDecoration(
                         color: BotanicalTheme.surface,
                         borderRadius: BorderRadius.circular(BotanicalTheme.radiusLg),
                         border: Border.all(
-                          color: BotanicalTheme.outline.withValues(alpha: 0.5),
+                          color: isCurrentCat
+                              ? BotanicalTheme.primary
+                              : BotanicalTheme.outline.withValues(alpha: 0.5),
+                          width: isCurrentCat ? 2 : 1,
                         ),
-                        boxShadow: BotanicalTheme.cardShadow,
+                        boxShadow: isCurrentCat
+                            ? [
+                                BoxShadow(
+                                  color: BotanicalTheme.primary.withValues(alpha: 0.16),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : BotanicalTheme.cardShadow,
                       ),
                       padding: const EdgeInsets.all(12),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Top Status Tag with Lock
+                          // Top Status Tag (Active badge for Playful Cat, lock for others)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: BotanicalTheme.canvas,
+                                  color: isCurrentCat
+                                      ? BotanicalTheme.primary
+                                      : BotanicalTheme.canvas,
                                   borderRadius: BorderRadius.circular(100),
                                 ),
                                 child: Text(
-                                  skin.rarity.split(' ').first,
-                                  style: const TextStyle(
+                                  isCurrentCat ? 'ACTIVE' : skin.rarity.split(' ').first,
+                                  style: TextStyle(
                                     fontSize: 9,
-                                    fontWeight: FontWeight.w700,
-                                    color: BotanicalTheme.primary,
+                                    fontWeight: FontWeight.w800,
+                                    color: isCurrentCat
+                                        ? BotanicalTheme.onPrimary
+                                        : BotanicalTheme.primary,
                                   ),
                                 ),
                               ),
                               Container(
                                 width: 22,
                                 height: 22,
-                                decoration: const BoxDecoration(
-                                  color: BotanicalTheme.canvas,
+                                decoration: BoxDecoration(
+                                  color: isCurrentCat
+                                      ? BotanicalTheme.butter
+                                      : BotanicalTheme.canvas,
                                   shape: BoxShape.circle,
+                                  border: isCurrentCat
+                                      ? Border.all(color: BotanicalTheme.butterBorder)
+                                      : null,
                                 ),
-                                child: const Icon(
-                                  Icons.lock_rounded,
-                                  size: 12,
-                                  color: BotanicalTheme.textMuted,
+                                child: Icon(
+                                  isCurrentCat
+                                      ? Icons.check_rounded
+                                      : Icons.lock_rounded,
+                                  size: isCurrentCat ? 13 : 12,
+                                  color: isCurrentCat
+                                      ? BotanicalTheme.primary
+                                      : BotanicalTheme.textMuted,
                                 ),
                               ),
                             ],
                           ),
 
-                          // Skin Avatar (slightly dimmed)
+                          // Skin Avatar (highlighted / full opacity for current cat)
                           Expanded(
                             child: Center(
                               child: Opacity(
-                                opacity: 0.75,
+                                opacity: isCurrentCat ? 1.0 : 0.75,
                                 child: skin.assetPath != null
                                     ? Image.asset(
                                         skin.assetPath!,
@@ -295,28 +354,42 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                           ),
                           const SizedBox(height: 6),
 
-                          // Locked Pill Button
+                          // Bottom Button: "Current Pet" for Playful Cat, "Coming Soon" with lock for others
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 5),
                             decoration: BoxDecoration(
-                              color: BotanicalTheme.surfaceContainer,
+                              color: isCurrentCat
+                                  ? BotanicalTheme.butter
+                                  : BotanicalTheme.surfaceContainer,
                               borderRadius: BorderRadius.circular(100),
                               border: Border.all(
-                                color: BotanicalTheme.outline.withValues(alpha: 0.6),
+                                color: isCurrentCat
+                                    ? BotanicalTheme.butterBorder
+                                    : BotanicalTheme.outline.withValues(alpha: 0.6),
                               ),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.lock_rounded, size: 11, color: BotanicalTheme.textMuted),
-                                SizedBox(width: 4),
+                                Icon(
+                                  isCurrentCat
+                                      ? Icons.pets_rounded
+                                      : Icons.lock_rounded,
+                                  size: 11,
+                                  color: isCurrentCat
+                                      ? BotanicalTheme.primary
+                                      : BotanicalTheme.textMuted,
+                                ),
+                                const SizedBox(width: 4),
                                 Text(
-                                  'Coming Soon',
+                                  isCurrentCat ? 'Current Pet' : 'Coming Soon',
                                   style: TextStyle(
                                     fontSize: 10.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: BotanicalTheme.textMuted,
+                                    fontWeight: isCurrentCat ? FontWeight.w800 : FontWeight.w700,
+                                    color: isCurrentCat
+                                        ? BotanicalTheme.primary
+                                        : BotanicalTheme.textMuted,
                                   ),
                                 ),
                               ],

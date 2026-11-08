@@ -110,44 +110,6 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     );
   }
 
-  Widget _buildPetWidget(double size) {
-    return Container(
-      width: size,
-      height: size,
-      padding: const EdgeInsets.all(2),
-      child: Image.asset(
-        'assets/cat/animations/gifs/idle.gif',
-        fit: BoxFit.contain,
-      ),
-    );
-  }
-
-  Widget _buildBadgeWidget() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: BotanicalTheme.butter,
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: BotanicalTheme.butterBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x20000000),
-            blurRadius: 4,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: const Text(
-        '0m 15s • 3 🔓',
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.w800,
-          color: BotanicalTheme.primary,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -246,195 +208,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
 
               const SizedBox(height: 14),
 
-              // Live Notch Simulator Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: BotanicalTheme.surface,
-                  borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
-                  border: Border.all(
-                    color: BotanicalTheme.outline.withValues(alpha: 0.5),
-                  ),
-                  boxShadow: BotanicalTheme.cardShadow,
-                ),
-                child: Column(
-                  children: [
-                    Wrap(
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 7,
-                              height: 7,
-                              decoration: const BoxDecoration(
-                                color: BotanicalTheme.primary,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            const Flexible(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  'LIVE NOTCH SIMULATOR',
-                                  style: TextStyle(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.8,
-                                    color: BotanicalTheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: BotanicalTheme.butter,
-                            borderRadius: BorderRadius.circular(100),
-                            border: Border.all(
-                              color: BotanicalTheme.butterBorder,
-                            ),
-                          ),
-                          child: const FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              'Hardware Overlay v1.4',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.bold,
-                                color: BotanicalTheme.primary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
 
-                    // Dark Viewport in Deep Forest Evergreen (Glitch-free, clipped & dynamically oriented)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        width: double.infinity,
-                        height: 110,
-                        decoration: BoxDecoration(
-                          color: BotanicalTheme.primary,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x33000000),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final w = constraints.maxWidth;
-                            final h = constraints.maxHeight;
-                            final expandToLeft = _xPercent > 70.0;
-                            final size = _sizeDp.toDouble().clamp(20.0, 56.0);
-                            const totalBadgeW = 76.0;
-                            final totalContentW = size + 4.0 + totalBadgeW;
-
-                            // Calculate coordinate matching PetOverlayService
-                            final petCenterTargetX = w * (_xPercent / 100.0);
-                            final petTopTargetY = (_yDp * 1.0).clamp(4.0, (h - size - 6.0).clamp(4.0, h));
-
-                            final double groupLeft;
-                            if (expandToLeft) {
-                              // [Badge] [Pet]
-                              groupLeft = (petCenterTargetX - totalContentW + size / 2)
-                                  .clamp(4.0, (w - totalContentW - 4.0).clamp(4.0, w));
-                            } else {
-                              // [Pet] [Badge]
-                              groupLeft = (petCenterTargetX - size / 2)
-                                  .clamp(4.0, (w - totalContentW - 4.0).clamp(4.0, w));
-                            }
-
-                            return Stack(
-                              clipBehavior: Clip.hardEdge,
-                              children: [
-                                // Center Camera Cutout Ring
-                                Positioned(
-                                  left: (w * 0.5) - 8,
-                                  top: 10,
-                                  child: Container(
-                                    width: 16,
-                                    height: 16,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.black,
-                                      border: Border.all(
-                                        color: BotanicalTheme.butter.withValues(alpha: 0.35),
-                                        width: 1.5,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                // Moving Pet + Badge Group
-                                Positioned(
-                                  left: groupLeft,
-                                  top: petTopTargetY,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: expandToLeft
-                                        ? [
-                                            _buildBadgeWidget(),
-                                            const SizedBox(width: 4),
-                                            _buildPetWidget(size),
-                                          ]
-                                        : [
-                                            _buildPetWidget(size),
-                                            const SizedBox(width: 4),
-                                            _buildBadgeWidget(),
-                                          ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.info_outline_rounded,
-                          size: 14,
-                          color: BotanicalTheme.textMuted,
-                        ),
-                        SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            'Live preview: pet moves on your phone status bar as you drag',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: BotanicalTheme.textMuted,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 14),
 
               // Precision Alignment Card
               Container(
@@ -740,7 +514,11 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                             SnackBar(
                               content: Row(
                                 children: [
-                                  const Text('🐾', style: TextStyle(fontSize: 16)),
+                                  const Icon(
+                                    Icons.pets_rounded,
+                                    size: 18,
+                                    color: BotanicalTheme.primary,
+                                  ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
@@ -821,7 +599,11 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Center(
-                        child: Text('👆', style: TextStyle(fontSize: 20)),
+                        child: Icon(
+                          Icons.touch_app_rounded,
+                          color: BotanicalTheme.primary,
+                          size: 22,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),

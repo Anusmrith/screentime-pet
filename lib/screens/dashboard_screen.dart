@@ -244,7 +244,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         SnackBar(
           content: Row(
             children: [
-              const Text('😼', style: TextStyle(fontSize: 16)),
+              const Icon(Icons.pets_rounded, size: 18, color: BotanicalTheme.butter),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

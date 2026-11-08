@@ -50,11 +50,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         SnackBar(
           content: const Row(
             children: [
-              Text('🔒', style: TextStyle(fontSize: 16)),
+              Icon(Icons.lock_rounded, size: 18, color: BotanicalTheme.primary),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Wardrobe is coming soon! 🐾 Stay tuned for cozy seasonal outfits!',
+                  'Wardrobe is coming soon! Stay tuned for cozy seasonal outfits!',
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,

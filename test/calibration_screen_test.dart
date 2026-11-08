@@ -102,4 +102,23 @@ void main() {
     expect(find.text('Snap to Cutout'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('CalibrationScreen does not contain hardware overlay simulator or finger emoji',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: BotanicalTheme.themeData,
+        home: const CalibrationScreen(),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('LIVE NOTCH SIMULATOR'), findsNothing);
+    expect(find.text('Hardware Overlay v1.4'), findsNothing);
+    expect(find.text('👆'), findsNothing);
+    expect(find.text('🐾'), findsNothing);
+    expect(find.byIcon(Icons.touch_app_rounded), findsOneWidget);
+  });
 }
