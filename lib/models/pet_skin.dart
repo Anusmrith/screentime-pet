@@ -21,14 +21,14 @@ class PetSkin {
 
   static const List<PetSkin> defaultSkins = [
     PetSkin(
-      id: 'tiger',
-      name: 'Ginger Tiger',
-      subtitle: 'Your faithful screen-time companion',
+      id: 'cat',
+      name: 'Playful Cat',
+      subtitle: 'Your animated screen-time companion',
       emoji: '🐱',
       rarity: 'Active Companion',
       price: 'FREE',
       isUnlocked: true,
-      assetPath: 'assets/images/pet_tiger.png',
+      assetPath: 'assets/cat/animations/gifs/idle.gif',
     ),
     PetSkin(
       id: 'midnight_cat',

@@ -1,0 +1,363 @@
+{
+ "poses_sheet": {
+  "image": "cat_poses_sheet.png",
+  "cell": [
+   320,
+   240
+  ],
+  "size": [
+   1920,
+   720
+  ],
+  "frames": {
+   "idle": {
+    "x": 0,
+    "y": 0,
+    "w": 320,
+    "h": 240,
+    "col": 0,
+    "row": 0,
+    "index": 0
+   },
+   "squint": {
+    "x": 320,
+    "y": 0,
+    "w": 320,
+    "h": 240,
+    "col": 1,
+    "row": 0,
+    "index": 1
+   },
+   "bored": {
+    "x": 640,
+    "y": 0,
+    "w": 320,
+    "h": 240,
+    "col": 2,
+    "row": 0,
+    "index": 2
+   },
+   "happy_heart": {
+    "x": 960,
+    "y": 0,
+    "w": 320,
+    "h": 240,
+    "col": 3,
+    "row": 0,
+    "index": 3
+   },
+   "tail_wag": {
+    "x": 1280,
+    "y": 0,
+    "w": 320,
+    "h": 240,
+    "col": 4,
+    "row": 0,
+    "index": 4
+   },
+   "run_a": {
+    "x": 1600,
+    "y": 0,
+    "w": 320,
+    "h": 240,
+    "col": 5,
+    "row": 0,
+    "index": 5
+   },
+   "run_b": {
+    "x": 0,
+    "y": 240,
+    "w": 320,
+    "h": 240,
+    "col": 0,
+    "row": 1,
+    "index": 6
+   },
+   "jump": {
+    "x": 320,
+    "y": 240,
+    "w": 320,
+    "h": 240,
+    "col": 1,
+    "row": 1,
+    "index": 7
+   },
+   "pounce": {
+    "x": 640,
+    "y": 240,
+    "w": 320,
+    "h": 240,
+    "col": 2,
+    "row": 1,
+    "index": 8
+   },
+   "sleep": {
+    "x": 960,
+    "y": 240,
+    "w": 320,
+    "h": 240,
+    "col": 3,
+    "row": 1,
+    "index": 9
+   },
+   "wave": {
+    "x": 1280,
+    "y": 240,
+    "w": 320,
+    "h": 240,
+    "col": 4,
+    "row": 1,
+    "index": 10
+   },
+   "butterfly": {
+    "x": 1600,
+    "y": 240,
+    "w": 320,
+    "h": 240,
+    "col": 5,
+    "row": 1,
+    "index": 11
+   },
+   "sit_look": {
+    "x": 0,
+    "y": 480,
+    "w": 320,
+    "h": 240,
+    "col": 0,
+    "row": 2,
+    "index": 12
+   },
+   "look_up_heart": {
+    "x": 320,
+    "y": 480,
+    "w": 320,
+    "h": 240,
+    "col": 1,
+    "row": 2,
+    "index": 13
+   },
+   "confused": {
+    "x": 640,
+    "y": 480,
+    "w": 320,
+    "h": 240,
+    "col": 2,
+    "row": 2,
+    "index": 14
+   },
+   "cheer": {
+    "x": 960,
+    "y": 480,
+    "w": 320,
+    "h": 240,
+    "col": 3,
+    "row": 2,
+    "index": 15
+   }
+  }
+ },
+ "emotes_sheet": {
+  "image": "cat_emotes_sheet.png",
+  "cell": [
+   180,
+   150
+  ],
+  "size": [
+   1080,
+   300
+  ],
+  "frames": {
+   "head_neutral": {
+    "x": 0,
+    "y": 0,
+    "w": 180,
+    "h": 150,
+    "col": 0,
+    "row": 0,
+    "index": 0
+   },
+   "head_happy": {
+    "x": 180,
+    "y": 0,
+    "w": 180,
+    "h": 150,
+    "col": 1,
+    "row": 0,
+    "index": 1
+   },
+   "head_angry": {
+    "x": 360,
+    "y": 0,
+    "w": 180,
+    "h": 150,
+    "col": 2,
+    "row": 0,
+    "index": 2
+   },
+   "head_cry": {
+    "x": 540,
+    "y": 0,
+    "w": 180,
+    "h": 150,
+    "col": 3,
+    "row": 0,
+    "index": 3
+   },
+   "exclaim": {
+    "x": 720,
+    "y": 0,
+    "w": 180,
+    "h": 150,
+    "col": 4,
+    "row": 0,
+    "index": 4
+   },
+   "head_love": {
+    "x": 900,
+    "y": 0,
+    "w": 180,
+    "h": 150,
+    "col": 5,
+    "row": 0,
+    "index": 5
+   },
+   "hearts": {
+    "x": 0,
+    "y": 150,
+    "w": 180,
+    "h": 150,
+    "col": 0,
+    "row": 1,
+    "index": 6
+   },
+   "sparkles": {
+    "x": 180,
+    "y": 150,
+    "w": 180,
+    "h": 150,
+    "col": 1,
+    "row": 1,
+    "index": 7
+   },
+   "puff": {
+    "x": 360,
+    "y": 150,
+    "w": 180,
+    "h": 150,
+    "col": 2,
+    "row": 1,
+    "index": 8
+   },
+   "paw": {
+    "x": 540,
+    "y": 150,
+    "w": 180,
+    "h": 150,
+    "col": 3,
+    "row": 1,
+    "index": 9
+   },
+   "dust_spark": {
+    "x": 720,
+    "y": 150,
+    "w": 180,
+    "h": 150,
+    "col": 4,
+    "row": 1,
+    "index": 10
+   },
+   "fish": {
+    "x": 900,
+    "y": 150,
+    "w": 180,
+    "h": 150,
+    "col": 5,
+    "row": 1,
+    "index": 11
+   }
+  }
+ },
+ "animations": {
+  "idle": {
+   "frames": [
+    "idle",
+    "idle",
+    "idle",
+    "bored",
+    "idle",
+    "tail_wag",
+    "idle",
+    "tail_wag"
+   ],
+   "fps": 3,
+   "loop": true
+  },
+  "happy": {
+   "frames": [
+    "happy_heart",
+    "tail_wag"
+   ],
+   "fps": 3,
+   "loop": true
+  },
+  "walk_run": {
+   "frames": [
+    "run_a",
+    "run_b"
+   ],
+   "fps": 8,
+   "loop": true
+  },
+  "jump": {
+   "frames": [
+    "run_a",
+    "jump",
+    "pounce"
+   ],
+   "fps": 6,
+   "loop": false
+  },
+  "sleep": {
+   "frames": [
+    "sleep"
+   ],
+   "fps": 1,
+   "loop": true,
+   "overlay": "zzz (in sprite)"
+  },
+  "greet": {
+   "frames": [
+    "wave",
+    "idle"
+   ],
+   "fps": 3,
+   "loop": true
+  },
+  "play": {
+   "frames": [
+    "butterfly",
+    "look_up_heart",
+    "sit_look"
+   ],
+   "fps": 2,
+   "loop": true
+  },
+  "curious": {
+   "frames": [
+    "confused",
+    "sit_look"
+   ],
+   "fps": 2,
+   "loop": true
+  },
+  "celebrate": {
+   "frames": [
+    "cheer",
+    "happy_heart"
+   ],
+   "fps": 4,
+   "loop": true
+  }
+ },
+ "notes": "Frames are bottom-center aligned in cells; flip horizontally in code for left/right facing."
+}

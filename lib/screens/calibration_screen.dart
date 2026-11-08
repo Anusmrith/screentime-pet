@@ -164,7 +164,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                             height: _sizeDp.toDouble(),
                             padding: const EdgeInsets.all(2),
                             child: Image.asset(
-                              'assets/images/pet_tiger.png',
+                              'assets/cat/animations/gifs/idle.gif',
                               fit: BoxFit.contain,
                             ),
                           ),

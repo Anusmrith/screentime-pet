@@ -1,0 +1,124 @@
+{
+ "cell": [
+  360,
+  320
+ ],
+ "anchor": [
+  180,
+  305
+ ],
+ "animations": {
+  "idle": {
+   "file": "anims/idle.png",
+   "frames": 24,
+   "fps": 12,
+   "loop": true,
+   "faces": "front"
+  },
+  "walk": {
+   "file": "anims/walk.png",
+   "frames": 8,
+   "fps": 10,
+   "loop": true,
+   "faces": "left"
+  },
+  "run": {
+   "file": "anims/run.png",
+   "frames": 8,
+   "fps": 14,
+   "loop": true,
+   "faces": "left"
+  },
+  "jump": {
+   "file": "anims/jump.png",
+   "frames": 23,
+   "fps": 16,
+   "loop": false,
+   "faces": "left"
+  },
+  "look_around": {
+   "file": "anims/look_around.png",
+   "frames": 36,
+   "fps": 12,
+   "loop": true,
+   "faces": "front"
+  },
+  "curious": {
+   "file": "anims/curious.png",
+   "frames": 40,
+   "fps": 12,
+   "loop": true,
+   "faces": "front"
+  },
+  "sleep": {
+   "file": "anims/sleep.png",
+   "frames": 20,
+   "fps": 6,
+   "loop": true,
+   "faces": "left"
+  },
+  "wave": {
+   "file": "anims/wave.png",
+   "frames": 12,
+   "fps": 8,
+   "loop": true,
+   "faces": "front"
+  },
+  "happy": {
+   "file": "anims/happy.png",
+   "frames": 16,
+   "fps": 12,
+   "loop": true,
+   "faces": "front"
+  },
+  "play": {
+   "file": "anims/play.png",
+   "frames": 24,
+   "fps": 10,
+   "loop": true,
+   "faces": "front"
+  },
+  "celebrate": {
+   "file": "anims/celebrate.png",
+   "frames": 16,
+   "fps": 12,
+   "loop": true,
+   "faces": "front"
+  },
+  "pounce": {
+   "file": "anims/pounce.png",
+   "frames": 17,
+   "fps": 14,
+   "loop": false,
+   "faces": "left"
+  },
+  "walk_right": {
+   "file": "anims/walk_right.png",
+   "frames": 8,
+   "fps": 10,
+   "loop": true,
+   "faces": "right"
+  },
+  "run_right": {
+   "file": "anims/run_right.png",
+   "frames": 8,
+   "fps": 14,
+   "loop": true,
+   "faces": "right"
+  },
+  "jump_right": {
+   "file": "anims/jump_right.png",
+   "frames": 23,
+   "fps": 16,
+   "loop": false,
+   "faces": "right"
+  },
+  "pounce_right": {
+   "file": "anims/pounce_right.png",
+   "frames": 17,
+   "fps": 14,
+   "loop": false,
+   "faces": "right"
+  }
+ }
+}

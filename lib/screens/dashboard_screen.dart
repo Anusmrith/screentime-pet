@@ -22,6 +22,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _screenTimeFormatted = '0m 00s';
   String _lastRoast = 'ScreenPet on duty! 🐾';
   Timer? _refreshTimer;
+  String _activeAnimation = 'idle';
+  Timer? _animResetTimer;
+
+  void _triggerPetAnimation(String animName, [String? dialogue]) {
+    _animResetTimer?.cancel();
+    setState(() {
+      _activeAnimation = animName;
+      if (dialogue != null && dialogue.isNotEmpty) {
+        _lastRoast = dialogue;
+      }
+    });
+
+    if (animName != 'idle') {
+      _animResetTimer = Timer(const Duration(milliseconds: 3200), () {
+        if (mounted) {
+          setState(() {
+            _activeAnimation = 'idle';
+          });
+        }
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -36,6 +58,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _animResetTimer?.cancel();
     super.dispose();
   }
 
@@ -65,13 +88,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _pokePet() async {
     HapticFeedback.lightImpact();
+    const pokeAnims = ['play', 'happy', 'pounce', 'jump'];
+    final randomAnim = pokeAnims[DateTime.now().microsecond % pokeAnims.length];
     final newRoast = await OverlayBridge.pokePet();
     if (mounted) {
-      setState(() {
-        if (newRoast != null && newRoast.isNotEmpty) {
-          _lastRoast = newRoast;
-        }
-      });
+      _triggerPetAnimation(randomAnim, newRoast);
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -179,7 +200,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           padding: const EdgeInsets.all(4),
                           child: Image.asset(
-                            'assets/images/pet_tiger.png',
+                            'assets/cat/animations/gifs/idle.gif',
                             fit: BoxFit.contain,
                           ),
                         ),
@@ -318,41 +339,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   child: Column(
                     children: [
-                      // Pet Avatar Display
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  const Color(0xFFFF8C42).withValues(alpha: 0.25),
-                                  Colors.transparent,
-                                ],
+                      // Interactive Animated Pet Avatar Display
+                      GestureDetector(
+                        onTap: _pokePet,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 110,
+                              height: 110,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    const Color(0xFFFF8C42).withValues(alpha: 0.25),
+                                    Colors.transparent,
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          Image.asset(
-                            'assets/images/pet_tiger.png',
-                            width: 72,
-                            height: 72,
-                            fit: BoxFit.contain,
-                          ),
-                        ],
+                            Image.asset(
+                              'assets/cat/animations/gifs/$_activeAnimation.gif',
+                              width: 86,
+                              height: 86,
+                              fit: BoxFit.contain,
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       const Text(
-                        'Ginger Tiger Companion',
+                        'Playful Cat Companion',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFFF0F6FC),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Text(
                         _isOverlayRunning
                             ? 'Floating beside your front camera. Time and unlocks update live every second.'
@@ -364,7 +388,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           height: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 14),
+
+                      // Animation Selector Pills
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildAnimPill('🐾 Idle', 'idle'),
+                            _buildAnimPill('😸 Happy', 'happy'),
+                            _buildAnimPill('👋 Wave', 'wave'),
+                            _buildAnimPill('🎾 Play', 'play'),
+                            _buildAnimPill('👀 Curious', 'curious'),
+                            _buildAnimPill('💤 Sleep', 'sleep'),
+                            _buildAnimPill('🎉 Celebrate', 'celebrate'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
 
                       // Spawn / Dismiss Button
                       SizedBox(
@@ -646,6 +687,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimPill(String label, String animKey) {
+    final isSelected = _activeAnimation == animKey;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          _triggerPetAnimation(animKey);
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFFFF8C42).withValues(alpha: 0.2)
+                : const Color(0xFF21262D),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected ? const Color(0xFFFF8C42) : const Color(0xFF30363D),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? const Color(0xFFFF8C42) : const Color(0xFFC9D1D9),
             ),
           ),
         ),

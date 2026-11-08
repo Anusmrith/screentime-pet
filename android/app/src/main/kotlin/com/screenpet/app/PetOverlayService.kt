@@ -13,8 +13,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.content.pm.ServiceInfo
+import android.graphics.ImageDecoder
 import android.graphics.PixelFormat
 import android.graphics.Rect
+import android.graphics.drawable.AnimatedImageDrawable
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -65,6 +68,8 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     private var isCustomAnimating = false
     private var idleAnimator: ValueAnimator? = null
     private var isDoomscrollWarningShown = false
+    private var currentPetDrawable: Drawable? = null
+    private var revertToIdleRunnable: Runnable? = null
 
     private val secondTickerRunnable = object : Runnable {
         override fun run() {
@@ -214,6 +219,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
                     }
                 }
                 view.visibility = View.VISIBLE
+                setPetAnimation(R.raw.cat_idle, loop = true)
                 updateStatsBadge(force = true)
                 if (usageTracker.isScreenCurrentlyOn()) {
                     startSecondTicker()
@@ -231,6 +237,9 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         mainHandler.post {
             stopSecondTicker()
             stopIdleBreathing()
+            (currentPetDrawable as? AnimatedImageDrawable)?.stop()
+            revertToIdleRunnable?.let { mainHandler.removeCallbacks(it) }
+            revertToIdleRunnable = null
             overlayView?.let { view ->
                 if (view.parent != null) {
                     try {
@@ -362,6 +371,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
         try {
             windowManager.addView(view, params)
+            setPetAnimation(R.raw.cat_idle, loop = true)
             isOverlayVisible = true
             prefs.edit().putBoolean(KEY_OVERLAY_VISIBLE, true).apply()
         } catch (e: Exception) {
@@ -460,6 +470,42 @@ class PetOverlayService : Service(), UsageTracker.Listener {
             windowManager.updateViewLayout(view, params)
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    /**
+     * Sets and starts an animated GIF on the pet ImageView using Android's native AnimatedImageDrawable.
+     * If autoRevertMs > 0, automatically reverts to R.raw.cat_idle after the specified duration.
+     */
+    private fun setPetAnimation(resId: Int, loop: Boolean = true, autoRevertMs: Long = 0L) {
+        if (!::ivPet.isInitialized) return
+
+        revertToIdleRunnable?.let { mainHandler.removeCallbacks(it) }
+        revertToIdleRunnable = null
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(resources, resId)
+                val drawable = ImageDecoder.decodeDrawable(source)
+                ivPet.setImageDrawable(drawable)
+                currentPetDrawable = drawable
+                if (drawable is AnimatedImageDrawable) {
+                    drawable.repeatCount = if (loop) AnimatedImageDrawable.REPEAT_INFINITE else 0
+                    drawable.start()
+                }
+            } else {
+                ivPet.setImageResource(R.drawable.ic_pet)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ivPet.setImageResource(R.drawable.ic_pet)
+        }
+
+        if (autoRevertMs > 0L) {
+            revertToIdleRunnable = Runnable {
+                setPetAnimation(R.raw.cat_idle, loop = true)
+            }
+            mainHandler.postDelayed(revertToIdleRunnable!!, autoRevertMs)
         }
     }
 
@@ -614,6 +660,14 @@ class PetOverlayService : Service(), UsageTracker.Listener {
      * Plays a random poke animation when user taps the pet.
      */
     private fun playRandomPokeAnimation() {
+        val pokeAnimRes = when ((0..3).random()) {
+            0 -> R.raw.cat_play
+            1 -> R.raw.cat_happy
+            2 -> R.raw.cat_pounce
+            else -> R.raw.cat_jump
+        }
+        setPetAnimation(pokeAnimRes, loop = true, autoRevertMs = 2400L)
+
         when ((0..3).random()) {
             0 -> playSquashBounce()
             1 -> playSomersaultRoll()
@@ -652,6 +706,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
      * Doomscroll tilt to look exhausted.
      */
     private fun playDoomscrollTilt() {
+        setPetAnimation(R.raw.cat_curious, loop = true, autoRevertMs = 3500L)
         ivPet.animate()
             .rotation(15f)
             .setDuration(300)
@@ -755,6 +810,8 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     override fun onUnlock(totalScreenTimeMs: Long, unlockCount: Int, timeSinceLastScreenOffMs: Long) {
         mainHandler.post {
             if (isOverlayVisible) {
+                val unlockAnimRes = if (unlockCount % 5 == 0) R.raw.cat_celebrate else R.raw.cat_wave
+                setPetAnimation(unlockAnimRes, loop = true, autoRevertMs = 2800L)
                 playWakeUpAnimation()
                 showRoast(RoastEngine.getUnlockRoast(unlockCount, timeSinceLastScreenOffMs))
                 startSecondTicker()
@@ -772,12 +829,16 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         mainHandler.post {
             if (isOverlayVisible) {
                 if (isScreenOn) {
+                    setPetAnimation(R.raw.cat_idle, loop = true)
                     updateStatsBadge()
                     startSecondTicker()
                     startIdleBreathing()
                 } else {
                     stopSecondTicker()
                     stopIdleBreathing()
+                    (currentPetDrawable as? AnimatedImageDrawable)?.stop()
+                    revertToIdleRunnable?.let { mainHandler.removeCallbacks(it) }
+                    revertToIdleRunnable = null
                 }
             }
         }
