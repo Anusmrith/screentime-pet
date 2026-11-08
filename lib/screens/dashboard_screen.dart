@@ -880,7 +880,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     SizedBox(width: 5),
                     Flexible(
                       child: Text(
-                        'Resets daily after 12:00 AM (Midnight) like a clock',
+                        'Resets daily after 12:00 AM (Midnight)',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 11,
