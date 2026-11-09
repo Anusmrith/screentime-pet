@@ -76,12 +76,17 @@ class MainActivity : FlutterActivity() {
                 }
 
                 "updateCalibration" -> {
-                    val xPercent = (call.argument<Number>("xPercent"))?.toFloat()
+                    val rawX = (call.argument<Number>("xPercent"))?.toFloat()
                         ?: PetOverlayService.DEFAULT_X_PERCENT
-                    val yDp = (call.argument<Number>("yDp"))?.toInt()
+                    val rawY = (call.argument<Number>("yDp"))?.toInt()
                         ?: PetOverlayService.DEFAULT_Y_OFFSET_DP
-                    val sizeDp = (call.argument<Number>("sizeDp"))?.toInt()
+                    val rawSize = (call.argument<Number>("sizeDp"))?.toInt()
                         ?: PetOverlayService.DEFAULT_PET_SIZE_DP
+
+                    // Defensive input validation: clamp to strict valid boundaries
+                    val xPercent = rawX.coerceIn(0f, 100f)
+                    val yDp = rawY.coerceIn(0, 100)
+                    val sizeDp = rawSize.coerceIn(16, 72)
 
                     val prefs = context.getSharedPreferences(PetOverlayService.PREFS_SETTINGS, Context.MODE_PRIVATE)
                     prefs.edit()
@@ -214,7 +219,8 @@ class MainActivity : FlutterActivity() {
                 }
 
                 "setLanguageMode" -> {
-                    val mode = call.argument<String>("mode") ?: "manglish"
+                    val rawMode = call.argument<String>("mode") ?: "manglish"
+                    val mode = if (rawMode.equals("english", ignoreCase = true)) "english" else "manglish"
                     val prefs = context.getSharedPreferences(PetOverlayService.PREFS_SETTINGS, Context.MODE_PRIVATE)
                     prefs.edit().putString(PetOverlayService.KEY_LANGUAGE_MODE, mode).apply()
                     RoastEngine.setLanguage(mode)
