@@ -1136,10 +1136,193 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 16),
+
+                // 5. Privacy Policy & Terms Link
+                Center(
+                  child: TextButton.icon(
+                    onPressed: _showLegalSheet,
+                    icon: const Icon(Icons.shield_outlined,
+                        size: 14, color: BotanicalTheme.textMuted),
+                    label: const Text(
+                      'Privacy Policy & Terms of Service',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: BotanicalTheme.textMuted,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showLegalSheet() {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DefaultTabController(
+          length: 2,
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.78,
+            decoration: const BoxDecoration(
+              color: BotanicalTheme.surface,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: BotanicalTheme.outline.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: TabBar(
+                    indicatorColor: BotanicalTheme.primary,
+                    labelColor: BotanicalTheme.primary,
+                    unselectedLabelColor: BotanicalTheme.textMuted,
+                    labelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                    tabs: [
+                      Tab(text: 'Privacy Policy'),
+                      Tab(text: 'Terms of Service'),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, color: BotanicalTheme.surfaceContainer),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      _buildPrivacyTab(),
+                      _buildTermsTab(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLegalSection(String title, String body, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: BotanicalTheme.butter,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 16, color: BotanicalTheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: BotanicalTheme.textMain,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: BotanicalTheme.textMuted,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrivacyTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLegalSection(
+            '100% Offline Architecture',
+            'ScreenPet does not request the internet permission in production. Your data never leaves your device and cannot be transmitted over any network.',
+            Icons.wifi_off_rounded,
+          ),
+          _buildLegalSection(
+            'Zero Data Collection',
+            'We do not collect names, emails, phone numbers, or device identifiers. No third-party analytics or tracking SDKs are embedded in the app.',
+            Icons.privacy_tip_outlined,
+          ),
+          _buildLegalSection(
+            'Local Screen Time Habits',
+            'Active screen-on time and unlock counts are calculated locally using standard Android operating system broadcast events. No browsing or app content is accessed.',
+            Icons.timer_outlined,
+          ),
+          _buildLegalSection(
+            'Device Permissions',
+            'SYSTEM_ALERT_WINDOW is used solely to draw the animated companion next to your front camera cutout across apps. FOREGROUND_SERVICE ensures continuous habit tracking.',
+            Icons.security_rounded,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTermsTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLegalSection(
+            'Digital Wellbeing Companion',
+            'ScreenPet is provided for motivational, digital habit awareness, and entertainment purposes.',
+            Icons.favorite_border_rounded,
+          ),
+          _buildLegalSection(
+            'Non-Medical Disclaimer',
+            'ScreenPet is not a medical device or clinical treatment for device addiction. Statistics should not replace medical or psychological advice.',
+            Icons.health_and_safety_outlined,
+          ),
+          _buildLegalSection(
+            'Display & Safety',
+            'The companion sits by your camera cutout. Use the Calibration screen to adjust alignment so it does not obstruct emergency system controls or camera lenses.',
+            Icons.tune_rounded,
+          ),
+          _buildLegalSection(
+            'Personal License',
+            'ScreenPet is provided for personal use. Character animations and visual assets are used in accordance with author licensing.',
+            Icons.description_outlined,
+          ),
+        ],
       ),
     );
   }
