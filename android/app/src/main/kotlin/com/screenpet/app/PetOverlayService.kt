@@ -262,7 +262,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
             stopSecondTicker()
             stopIdleBreathing()
             cancelAmbientAction()
-            if (isWalking) {
+            if (isWalking && ::ivPet.isInitialized) {
                 ivPet.animate().cancel()
                 ivPet.translationX = 0f
                 isWalking = false
@@ -440,6 +440,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
      * Calculates the window X and Y based on user calibration sliders.
      */
     private fun calculatePosition(params: WindowManager.LayoutParams) {
+        if (!::ivPet.isInitialized) return
         val xPercent = prefs.getFloat(KEY_X_PERCENT, DEFAULT_X_PERCENT)
         val yOffsetDp = prefs.getInt(KEY_Y_OFFSET_DP, DEFAULT_Y_OFFSET_DP)
         val petSizeDp = prefs.getInt(KEY_PET_SIZE_DP, DEFAULT_PET_SIZE_DP)
@@ -513,6 +514,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     private fun applyCalibrationSettings() {
         val view = overlayView ?: return
         val params = windowParams ?: return
+        if (!::ivPet.isInitialized) return
 
         if (isWalking) {
             ivPet.animate().cancel()
@@ -568,6 +570,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
      * Idle Breathing Loop: Pet gently hovers vertically by 2-3dp so it feels alive.
      */
     private fun startIdleBreathing() {
+        if (!::ivPet.isInitialized) return
         stopIdleBreathing()
         val density = resources.displayMetrics.density
         idleAnimator = ValueAnimator.ofFloat(0f, -2.5f * density, 0f).apply {
@@ -575,7 +578,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
             repeatCount = ValueAnimator.INFINITE
             interpolator = AccelerateDecelerateInterpolator()
             addUpdateListener { anim ->
-                if (!isCustomAnimating) {
+                if (!isCustomAnimating && ::ivPet.isInitialized) {
                     ivPet.translationY = anim.animatedValue as Float
                 }
             }
@@ -586,7 +589,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     private fun stopIdleBreathing() {
         idleAnimator?.cancel()
         idleAnimator = null
-        if (!isCustomAnimating) {
+        if (!isCustomAnimating && ::ivPet.isInitialized) {
             ivPet.translationY = 0f
         }
     }
@@ -774,6 +777,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     private fun showRoast(text: String, durationMs: Long = 4500L) {
         prefs.edit().putString(KEY_LAST_ROAST, text).apply()
         activeRoastUntilMs = System.currentTimeMillis() + durationMs
+        if (!::tvStatsBadgeText.isInitialized || !::layoutStatsBadge.isInitialized) return
         tvStatsBadgeText.text = text
         layoutStatsBadge.visibility = View.VISIBLE
         layoutStatsBadge.alpha = 1.0f
@@ -842,7 +846,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     }
 
     private fun triggerAmbientBehavior() {
-        if (!isOverlayVisible || !usageTracker.isScreenCurrentlyOn()) return
+        if (!isOverlayVisible || !usageTracker.isScreenCurrentlyOn() || !::ivPet.isInitialized) return
         if (isCustomAnimating || isWalking) {
             scheduleNextAmbientAction(6000L, 12000L)
             return
@@ -995,6 +999,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
      * Updates the persistent stats badge text with live seconds and unlock count.
      */
     private fun updateStatsBadge(force: Boolean = false) {
+        if (!::tvStatsBadgeText.isInitialized) return
         val now = System.currentTimeMillis()
         if (!force && now < activeRoastUntilMs) {
             return
@@ -1044,7 +1049,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     override fun onUnlock(totalScreenTimeMs: Long, unlockCount: Int, timeSinceLastScreenOffMs: Long) {
         mainHandler.post {
             updateNotification()
-            if (isOverlayVisible) {
+            if (isOverlayVisible && ::ivPet.isInitialized) {
                 lastInteractiveEventTimeMs = System.currentTimeMillis()
                 isNapping = false
                 if (isWalking) {
@@ -1070,7 +1075,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
      */
     override fun onScreenStateChanged(isScreenOn: Boolean, totalScreenTimeMs: Long) {
         mainHandler.post {
-            if (isOverlayVisible) {
+            if (isOverlayVisible && ::ivPet.isInitialized) {
                 if (isScreenOn) {
                     lastInteractiveEventTimeMs = System.currentTimeMillis()
                     isNapping = false
