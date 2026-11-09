@@ -24,6 +24,7 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         usageTracker = UsageTracker(context)
+        usageTracker.startTracking()
 
         // Always ensure background habit tracking is running 24/7
         try {
@@ -239,6 +240,13 @@ class MainActivity : FlutterActivity() {
 
                 else -> result.notImplemented()
             }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::usageTracker.isInitialized) {
+            usageTracker.stopTracking()
         }
     }
 }

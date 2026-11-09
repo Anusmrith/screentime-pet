@@ -1019,6 +1019,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
      */
     override fun onUnlock(totalScreenTimeMs: Long, unlockCount: Int, timeSinceLastScreenOffMs: Long) {
         mainHandler.post {
+            updateNotification()
             if (isOverlayVisible) {
                 lastInteractiveEventTimeMs = System.currentTimeMillis()
                 isNapping = false
@@ -1031,6 +1032,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
                 setPetAnimation(unlockAnimRes, loop = true, autoRevertMs = 2800L)
                 playWakeUpAnimation()
                 showRoast(RoastEngine.getUnlockRoast(unlockCount, timeSinceLastScreenOffMs))
+                updateStatsBadge(force = true)
                 startSecondTicker()
                 startIdleBreathing()
                 scheduleNextAmbientAction(10000L, 20000L)

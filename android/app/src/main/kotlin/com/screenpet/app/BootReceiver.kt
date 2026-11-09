@@ -18,7 +18,7 @@ class BootReceiver : BroadcastReceiver() {
                     val isServiceEnabled = prefs.getBoolean(PetOverlayService.KEY_SERVICE_ENABLED, true)
                     val canDraw = android.provider.Settings.canDrawOverlays(ctx)
 
-                    if (isServiceEnabled && canDraw) {
+                    if (isServiceEnabled) {
                         val serviceIntent = Intent(ctx, PetOverlayService::class.java)
                         ContextCompat.startForegroundService(ctx, serviceIntent)
                     }
