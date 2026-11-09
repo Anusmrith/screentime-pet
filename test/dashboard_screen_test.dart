@@ -80,3 +80,4 @@ void main() {
     expect(find.text('Switched to Manglish + English dialogues!'), findsOneWidget);
   });
 }
+

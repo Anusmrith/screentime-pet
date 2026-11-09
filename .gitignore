@@ -35,6 +35,18 @@ android/**/GeneratedPluginRegistrant.java
 .gradle/
 local.properties
 
+# Secrets, Keys, and Environment Variables
+*.env
+*.env.*
+.env
+.env.*
+*.jks
+*.keystore
+key.properties
+**/key.properties
+**/*.pem
+**/*.key
+
 # Non-Android platforms (Pure Android Punch-hole overlay project)
 /ios/
 /linux/
