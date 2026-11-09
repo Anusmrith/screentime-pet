@@ -84,6 +84,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     private val secondTickerRunnable = object : Runnable {
         override fun run() {
             usageTracker.checkAndResetDailyStats()
+            usageTracker.recordUnlockIfPresent("second_ticker")
             updateStatsBadge()
             mainHandler.postDelayed(this, 1000L)
         }
@@ -774,6 +775,8 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         prefs.edit().putString(KEY_LAST_ROAST, text).apply()
         activeRoastUntilMs = System.currentTimeMillis() + durationMs
         tvStatsBadgeText.text = text
+        layoutStatsBadge.visibility = View.VISIBLE
+        layoutStatsBadge.alpha = 1.0f
 
         // Subtle pop-in bounce on badge
         layoutStatsBadge.scaleX = 0.85f
@@ -826,7 +829,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         scheduleNextAmbientAction()
     }
 
-    private fun scheduleNextAmbientAction(minDelayMs: Long = 11000L, maxDelayMs: Long = 22000L) {
+    private fun scheduleNextAmbientAction(minDelayMs: Long = 14000L, maxDelayMs: Long = 24000L) {
         cancelAmbientAction()
         if (!usageTracker.isScreenCurrentlyOn() || !isOverlayVisible) return
 
@@ -852,10 +855,10 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         val now = System.currentTimeMillis()
         val timeSinceInteraction = now - lastInteractiveEventTimeMs
 
-        // If inactive for > 120s, take a temporary 14-second catnap, then wake back up automatically
-        if (timeSinceInteraction > 120000L && !isNapping) {
+        // If inactive for > 180s (3 minutes), take a brief 6-second catnap, then wake back up automatically
+        if (timeSinceInteraction > 180000L && !isNapping) {
             isNapping = true
-            setPetAnimation(R.raw.cat_sleep, loop = true, autoRevertMs = 14000L)
+            setPetAnimation(R.raw.cat_sleep, loop = true, autoRevertMs = 6000L)
             mainHandler.postDelayed({
                 if (isOverlayVisible && usageTracker.isScreenCurrentlyOn()) {
                     isNapping = false
@@ -864,12 +867,12 @@ class PetOverlayService : Service(), UsageTracker.Listener {
                     showRoast("Yawn... still on duty! 🐾", durationMs = 4000L)
                     scheduleNextAmbientAction(14000L, 24000L)
                 }
-            }, 14000L)
+            }, 6000L)
             return
         }
 
         if (isNapping) {
-            scheduleNextAmbientAction(10000L, 20000L)
+            scheduleNextAmbientAction(8000L, 16000L)
             return
         }
 
@@ -901,6 +904,10 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         val walkAnimRes = if (walkLeft) R.raw.cat_walk else R.raw.cat_walk_right
         setPetAnimation(walkAnimRes, loop = true)
 
+        if (activeRoastUntilMs <= System.currentTimeMillis()) {
+            showRoast(RoastEngine.getAmbientWhisper(), durationMs = 4000L)
+        }
+
         ivPet.animate()
             .translationX(targetTranslationX)
             .setDuration(1200)
@@ -929,7 +936,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
     private fun performAmbientLookAround() {
         setPetAnimation(R.raw.cat_look_around, loop = true, autoRevertMs = 2800L)
-        if (activeRoastUntilMs <= System.currentTimeMillis() && random.nextBoolean()) {
+        if (activeRoastUntilMs <= System.currentTimeMillis()) {
             showRoast(RoastEngine.getAmbientWhisper(), durationMs = 4000L)
         }
         ivPet.animate()
@@ -950,7 +957,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
     private fun performAmbientPlay() {
         setPetAnimation(R.raw.cat_play, loop = true, autoRevertMs = 2500L)
-        if (activeRoastUntilMs <= System.currentTimeMillis() && random.nextBoolean()) {
+        if (activeRoastUntilMs <= System.currentTimeMillis()) {
             showRoast(RoastEngine.getAmbientWhisper(), durationMs = 4000L)
         }
         playSquashBounce()
@@ -967,7 +974,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
     private fun performAmbientHappy() {
         setPetAnimation(R.raw.cat_happy, loop = true, autoRevertMs = 2400L)
-        if (activeRoastUntilMs <= System.currentTimeMillis() && random.nextBoolean()) {
+        if (activeRoastUntilMs <= System.currentTimeMillis()) {
             showRoast(RoastEngine.getAmbientWhisper(), durationMs = 4000L)
         }
         val density = resources.displayMetrics.density
@@ -1071,7 +1078,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
                     updateStatsBadge()
                     startSecondTicker()
                     startIdleBreathing()
-                    scheduleNextAmbientAction(8000L, 16000L)
+                    scheduleNextAmbientAction(14000L, 24000L)
                 } else {
                     stopSecondTicker()
                     stopIdleBreathing()

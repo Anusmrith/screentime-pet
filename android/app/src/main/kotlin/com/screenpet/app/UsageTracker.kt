@@ -40,10 +40,37 @@ class UsageTracker(private val context: Context) {
     private var listener: Listener? = null
     private var isReceiverRegistered = false
     private var hasUnlockedThisScreenSession = false
+    private var isKeyguardPolling = false
 
-    private val delayedCheckRunnable250 = Runnable { recordUnlockIfPresent("screen_on_250ms") }
-    private val delayedCheckRunnable600 = Runnable { recordUnlockIfPresent("screen_on_600ms") }
-    private val delayedCheckRunnable1200 = Runnable { recordUnlockIfPresent("screen_on_1200ms") }
+    private val keyguardPollingRunnable = object : Runnable {
+        override fun run() {
+            if (!isScreenCurrentlyOn() || hasUnlockedThisScreenSession) {
+                isKeyguardPolling = false
+                return
+            }
+            val unlocked = recordUnlockIfPresent("keyguard_poll")
+            if (unlocked || hasUnlockedThisScreenSession) {
+                isKeyguardPolling = false
+            } else if (isScreenCurrentlyOn()) {
+                mainHandler.postDelayed(this, 350L)
+            } else {
+                isKeyguardPolling = false
+            }
+        }
+    }
+
+    private fun startKeyguardPolling() {
+        if (!isKeyguardPolling && !hasUnlockedThisScreenSession && isScreenCurrentlyOn()) {
+            isKeyguardPolling = true
+            mainHandler.removeCallbacks(keyguardPollingRunnable)
+            mainHandler.postDelayed(keyguardPollingRunnable, 200L)
+        }
+    }
+
+    private fun stopKeyguardPolling() {
+        isKeyguardPolling = false
+        mainHandler.removeCallbacks(keyguardPollingRunnable)
+    }
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -109,7 +136,7 @@ class UsageTracker(private val context: Context) {
      */
     fun stopTracking() {
         if (isReceiverRegistered) {
-            cancelDelayedChecks()
+            stopKeyguardPolling()
             // Commit any currently ongoing screen-on session before stopping
             handleScreenOff()
             try {
@@ -120,14 +147,8 @@ class UsageTracker(private val context: Context) {
         }
     }
 
-    private fun cancelDelayedChecks() {
-        mainHandler.removeCallbacks(delayedCheckRunnable250)
-        mainHandler.removeCallbacks(delayedCheckRunnable600)
-        mainHandler.removeCallbacks(delayedCheckRunnable1200)
-    }
-
     private fun handleScreenOn() {
-        cancelDelayedChecks()
+        stopKeyguardPolling()
         hasUnlockedThisScreenSession = false
         checkAndResetDailyStats()
         val now = System.currentTimeMillis()
@@ -136,20 +157,20 @@ class UsageTracker(private val context: Context) {
             .putLong(KEY_CONTINUOUS_SESSION_START, now)
             .apply()
 
-        // 1. Immediate check: If device is already unlocked at screen-on (no lock screen, Smart Lock)
-        recordUnlockIfPresent("screen_on")
-
-        // 2. Staggered checks: For fast biometric / Face Unlock where keyguard dismisses within milliseconds
-        // and OEM firmware omits ACTION_USER_PRESENT
-        mainHandler.postDelayed(delayedCheckRunnable250, 250L)
-        mainHandler.postDelayed(delayedCheckRunnable600, 600L)
-        mainHandler.postDelayed(delayedCheckRunnable1200, 1200L)
-
+        // 1. First notify listeners that screen is ON so live ticker and views are primed
         listener?.onScreenStateChanged(isScreenOn = true, getTodayScreenTimeMs())
+
+        // 2. Check if already unlocked (e.g. fingerprint sensor woke & unlocked device, or no lockscreen)
+        val unlockedImmediately = recordUnlockIfPresent("screen_on")
+
+        // 3. If still locked (e.g. user clicked power button), poll keyguard until unlocked or screen off
+        if (!unlockedImmediately && !hasUnlockedThisScreenSession) {
+            startKeyguardPolling()
+        }
     }
 
     private fun handleScreenOff() {
-        cancelDelayedChecks()
+        stopKeyguardPolling()
         hasUnlockedThisScreenSession = false
         checkAndResetDailyStats()
         val now = System.currentTimeMillis()
@@ -168,7 +189,7 @@ class UsageTracker(private val context: Context) {
     }
 
     private fun handleUserUnlock() {
-        cancelDelayedChecks()
+        stopKeyguardPolling()
         recordUnlockIfPresent("user_present")
     }
 
@@ -183,7 +204,7 @@ class UsageTracker(private val context: Context) {
             return false
         }
 
-        // For non-USER_PRESENT sources (screen_on, biometric checks), verify keyguard is truly dismissed
+        // For non-USER_PRESENT sources (screen_on, keyguard poll, second_ticker), verify keyguard is truly dismissed
         if (source != "user_present") {
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
             val isInteractive = powerManager?.isInteractive ?: true
@@ -205,18 +226,17 @@ class UsageTracker(private val context: Context) {
 
         val now = System.currentTimeMillis()
         val lastUnlockTime = prefs.getLong(KEY_LAST_UNLOCK_TIMESTAMP, 0L)
+        val lastOff = prefs.getLong(KEY_LAST_SCREEN_OFF_TIMESTAMP, 0L)
 
-        // Timestamp debounce to prevent rapid bounces (< 1200ms)
-        if (now - lastUnlockTime < UNLOCK_DEBOUNCE_MS) {
-            hasUnlockedThisScreenSession = true
+        // Only debounce rapid duplicate triggers (< 500ms) if screen did NOT turn off in between
+        if (now - lastUnlockTime < 500L && lastOff <= lastUnlockTime) {
             return false
         }
 
         hasUnlockedThisScreenSession = true
-        cancelDelayedChecks()
+        stopKeyguardPolling()
         checkAndResetDailyStats()
 
-        val lastOff = prefs.getLong(KEY_LAST_SCREEN_OFF_TIMESTAMP, 0L)
         val timeSinceOff = if (lastOff > 0L) (now - lastOff).coerceAtLeast(0L) else -1L
         val currentUnlocks = prefs.getInt(KEY_UNLOCK_COUNT, 0) + 1
 
