@@ -634,7 +634,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'Bubbloo the Cat Companion',
+                        'Bubbloo the Notch Companion',
                         style: TextStyle(
                           fontSize: 19,
                           fontWeight: FontWeight.w800,
