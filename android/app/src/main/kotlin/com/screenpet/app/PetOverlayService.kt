@@ -92,7 +92,15 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     private val settingsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                ACTION_UPDATE_SETTINGS -> applyCalibrationSettings()
+                ACTION_UPDATE_SETTINGS -> {
+                    applyCalibrationSettings()
+                    val lang = prefs.getString(KEY_LANGUAGE_MODE, "manglish") ?: "manglish"
+                    RoastEngine.setLanguage(lang)
+                }
+                ACTION_UPDATE_LANGUAGE -> {
+                    val lang = prefs.getString(KEY_LANGUAGE_MODE, "manglish") ?: "manglish"
+                    RoastEngine.setLanguage(lang)
+                }
                 ACTION_STOP_SERVICE -> stopSelf()
                 ACTION_SHOW_PET -> showOverlay()
                 ACTION_DISMISS_PET -> hideOverlay()
@@ -107,6 +115,9 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         prefs = getSharedPreferences(PREFS_SETTINGS, Context.MODE_PRIVATE)
         prefs.edit().putBoolean(KEY_SERVICE_ENABLED, true).apply()
 
+        val initialLang = prefs.getString(KEY_LANGUAGE_MODE, "manglish") ?: "manglish"
+        RoastEngine.setLanguage(initialLang)
+
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
         usageTracker = UsageTracker(this)
@@ -115,6 +126,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
         val filter = IntentFilter().apply {
             addAction(ACTION_UPDATE_SETTINGS)
+            addAction(ACTION_UPDATE_LANGUAGE)
             addAction(ACTION_STOP_SERVICE)
             addAction(ACTION_SHOW_PET)
             addAction(ACTION_DISMISS_PET)
@@ -1139,6 +1151,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         const val NOTIFICATION_ID = 1001
 
         const val ACTION_UPDATE_SETTINGS = "com.screenpet.app.ACTION_UPDATE_SETTINGS"
+        const val ACTION_UPDATE_LANGUAGE = "com.screenpet.app.ACTION_UPDATE_LANGUAGE"
         const val ACTION_STOP_SERVICE = "com.screenpet.app.ACTION_STOP_SERVICE"
         const val ACTION_SHOW_PET = "com.screenpet.app.ACTION_SHOW_PET"
         const val ACTION_DISMISS_PET = "com.screenpet.app.ACTION_DISMISS_PET"
@@ -1149,6 +1162,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         const val PREFS_SETTINGS = "screen_pet_settings"
         const val KEY_SERVICE_ENABLED = "pref_service_enabled"
         const val KEY_OVERLAY_VISIBLE = "pref_overlay_visible"
+        const val KEY_LANGUAGE_MODE = "pref_language_mode"
         const val KEY_X_PERCENT = "pref_x_percent"
         const val KEY_Y_OFFSET_DP = "pref_y_dp"
         const val KEY_PET_SIZE_DP = "pref_pet_size_dp"

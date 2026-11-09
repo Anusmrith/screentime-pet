@@ -178,5 +178,31 @@ class OverlayBridge {
       return 'ScreenPet on duty! 🐾';
     }
   }
+
+  /// Sets dialogue language mode: 'english' (English only) or 'manglish' (English + Manglish).
+  static Future<bool> setLanguageMode(String mode) async {
+    try {
+      final bool? result =
+          await _channel.invokeMethod<bool>('setLanguageMode', {'mode': mode});
+      return result ?? false;
+    } on PlatformException catch (e) {
+      // ignore: avoid_print
+      print('OverlayBridge error setLanguageMode: ${e.message}');
+      return false;
+    }
+  }
+
+  /// Gets the currently active dialogue language mode.
+  static Future<String> getLanguageMode() async {
+    try {
+      final String? result =
+          await _channel.invokeMethod<String>('getLanguageMode');
+      return result ?? 'manglish';
+    } on PlatformException catch (e) {
+      // ignore: avoid_print
+      print('OverlayBridge error getLanguageMode: ${e.message}');
+      return 'manglish';
+    }
+  }
 }
 

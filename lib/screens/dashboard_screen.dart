@@ -22,6 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _unlockCount = 0;
   String _screenTimeFormatted = '0m 00s';
   String _lastRoast = 'ScreenPet on duty! 🐾';
+  String _languageMode = 'manglish';
   Timer? _refreshTimer;
   String _activeAnimation = 'idle';
   Timer? _animResetTimer;
@@ -211,14 +212,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _refreshState() async {
     final hasPerm = await OverlayBridge.checkOverlayPermission();
     final isRunning = await OverlayBridge.isOverlayRunning();
+    final langMode = await OverlayBridge.getLanguageMode();
     await _loadStats();
 
     if (mounted) {
       setState(() {
         _hasPermission = hasPerm;
         _isOverlayRunning = isRunning;
+        _languageMode = langMode;
       });
     }
+  }
+
+  Future<void> _setLanguageMode(String mode) async {
+    HapticFeedback.lightImpact();
+    await OverlayBridge.setLanguageMode(mode);
+    if (!mounted) return;
+    setState(() {
+      _languageMode = mode;
+      if (mode == 'english') {
+        _lastRoast = 'English dialogues activated! 🐱';
+      } else {
+        _lastRoast = 'Adipoli! Manglish dialogues activated! 🐾';
+      }
+    });
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.language_rounded, size: 18, color: BotanicalTheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                mode == 'english'
+                    ? 'Switched to English dialogues only!'
+                    : 'Switched to Manglish + English dialogues!',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: BotanicalTheme.textMain,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: BotanicalTheme.butter,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: BotanicalTheme.butterBorder),
+        ),
+      ),
+    );
   }
 
   Future<void> _loadStats() async {
@@ -687,56 +734,181 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 const SizedBox(height: 14),
 
-                // 2. Pet Dialogue & Roast Card (Soft Butter Pod)
-                InkWell(
-                  onTap: _pokePet,
-                  borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-                    decoration: BoxDecoration(
-                      color: BotanicalTheme.butter,
-                      borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
-                      border: Border.all(
-                        color: BotanicalTheme.butterBorder.withValues(alpha: 0.8),
-                      ),
-                      boxShadow: BotanicalTheme.cardShadow,
+                // 2. Pet Dialogue & Roast Card (Soft Butter Pod with Language Switcher)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: BotanicalTheme.butter,
+                    borderRadius: BorderRadius.circular(BotanicalTheme.radiusXl),
+                    border: Border.all(
+                      color: BotanicalTheme.butterBorder.withValues(alpha: 0.8),
                     ),
-                    child: Column(
-                      children: [
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.chat_bubble_rounded,
-                              size: 15,
-                              color: BotanicalTheme.primary,
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              'PET DIALOGUE & ROAST',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.8,
+                    boxShadow: BotanicalTheme.cardShadow,
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.chat_bubble_rounded,
+                                size: 14,
                                 color: BotanicalTheme.primary,
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                'PET DIALOGUE & ROAST',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.8,
+                                  color: BotanicalTheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: BotanicalTheme.canvas.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.touch_app_rounded, size: 10, color: BotanicalTheme.primary),
+                                SizedBox(width: 3),
+                                Text(
+                                  'Tap to Poke',
+                                  style: TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: BotanicalTheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: _pokePet,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          child: Text(
+                            '"$_lastRoast"',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: BotanicalTheme.textMain,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // English / Manglish Language Switcher
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: BotanicalTheme.surface,
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(
+                            color: BotanicalTheme.butterBorder.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => _setLanguageMode('english'),
+                                behavior: HitTestBehavior.opaque,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: _languageMode == 'english'
+                                        ? BotanicalTheme.primary
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.language_rounded,
+                                        size: 13,
+                                        color: _languageMode == 'english'
+                                            ? BotanicalTheme.onPrimary
+                                            : BotanicalTheme.textMuted,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'English',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                          color: _languageMode == 'english'
+                                              ? BotanicalTheme.onPrimary
+                                              : BotanicalTheme.textMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => _setLanguageMode('manglish'),
+                                behavior: HitTestBehavior.opaque,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: _languageMode == 'manglish'
+                                        ? BotanicalTheme.primary
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.pets_rounded,
+                                        size: 13,
+                                        color: _languageMode == 'manglish'
+                                            ? BotanicalTheme.onPrimary
+                                            : BotanicalTheme.textMuted,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Manglish + English',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                          color: _languageMode == 'manglish'
+                                              ? BotanicalTheme.onPrimary
+                                              : BotanicalTheme.textMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '"$_lastRoast"',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: BotanicalTheme.textMain,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
 

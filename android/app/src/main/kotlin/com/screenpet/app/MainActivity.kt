@@ -213,6 +213,30 @@ class MainActivity : FlutterActivity() {
                     )
                 }
 
+                "setLanguageMode" -> {
+                    val mode = call.argument<String>("mode") ?: "manglish"
+                    val prefs = context.getSharedPreferences(PetOverlayService.PREFS_SETTINGS, Context.MODE_PRIVATE)
+                    prefs.edit().putString(PetOverlayService.KEY_LANGUAGE_MODE, mode).apply()
+                    RoastEngine.setLanguage(mode)
+
+                    if (PetOverlayService.isRunning) {
+                        try {
+                            val broadcastIntent = Intent(PetOverlayService.ACTION_UPDATE_LANGUAGE).apply {
+                                setPackage(packageName)
+                            }
+                            sendBroadcast(broadcastIntent)
+                        } catch (ignored: Exception) {
+                        }
+                    }
+                    result.success(true)
+                }
+
+                "getLanguageMode" -> {
+                    val prefs = context.getSharedPreferences(PetOverlayService.PREFS_SETTINGS, Context.MODE_PRIVATE)
+                    val mode = prefs.getString(PetOverlayService.KEY_LANGUAGE_MODE, "manglish") ?: "manglish"
+                    result.success(mode)
+                }
+
                 else -> result.notImplemented()
             }
         }
