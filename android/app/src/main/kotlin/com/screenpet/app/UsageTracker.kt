@@ -36,6 +36,7 @@ class UsageTracker(private val context: Context) {
 
     private var listener: Listener? = null
     private var isReceiverRegistered = false
+    private var isScreenOff = false
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -80,26 +81,16 @@ class UsageTracker(private val context: Context) {
             checkAndResetDailyStats()
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
             val isInteractive = powerManager?.isInteractive ?: true
+            isScreenOff = !isInteractive
             if (isInteractive) {
                 val now = System.currentTimeMillis()
                 val currentScreenOn = prefs.getLong(KEY_SCREEN_ON_TIMESTAMP, 0L)
-                val editor = prefs.edit()
                 if (currentScreenOn == 0L) {
-                    editor.putLong(KEY_SCREEN_ON_TIMESTAMP, now)
+                    prefs.edit()
+                        .putLong(KEY_SCREEN_ON_TIMESTAMP, now)
                         .putLong(KEY_CONTINUOUS_SESSION_START, now)
+                        .apply()
                 }
-                val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
-                val isLocked = try {
-                    keyguardManager?.isKeyguardLocked ?: false
-                } catch (e: Exception) {
-                    false
-                }
-                if (!isLocked) {
-                    editor.putBoolean(KEY_IS_DEVICE_UNLOCKED, true)
-                }
-                editor.apply()
-            } else {
-                prefs.edit().putBoolean(KEY_IS_DEVICE_UNLOCKED, false).apply()
             }
         }
     }
@@ -128,7 +119,7 @@ class UsageTracker(private val context: Context) {
             .apply()
 
         // Check if device is already unlocked when screen turns on
-        // (e.g. no secure lock screen, Smart Lock active, or biometric unlock direct from screen-off/AOD)
+        // (e.g. no secure lock screen, Smart Lock active, or biometric direct-unlock from screen-off/AOD)
         val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
         val isLocked = try {
             keyguardManager?.isKeyguardLocked ?: false
@@ -136,15 +127,17 @@ class UsageTracker(private val context: Context) {
             false
         }
 
-        if (!isLocked) {
+        if (!isLocked && isScreenOff) {
             recordUnlock("screen_on_unlocked")
         }
+        isScreenOff = false
 
         listener?.onScreenStateChanged(isScreenOn = true, getTodayScreenTimeMs())
     }
 
     private fun handleScreenOff() {
         checkAndResetDailyStats()
+        isScreenOff = true
         val now = System.currentTimeMillis()
         val screenOnTime = prefs.getLong(KEY_SCREEN_ON_TIMESTAMP, 0L)
         val accumulated = prefs.getLong(KEY_ACCUMULATED_SCREEN_TIME_MS, 0L)
@@ -155,29 +148,28 @@ class UsageTracker(private val context: Context) {
             .putLong(KEY_SCREEN_ON_TIMESTAMP, 0L)
             .putLong(KEY_CONTINUOUS_SESSION_START, 0L)
             .putLong(KEY_LAST_SCREEN_OFF_TIMESTAMP, now)
-            .putBoolean(KEY_IS_DEVICE_UNLOCKED, false)
             .apply()
 
         listener?.onScreenStateChanged(isScreenOn = false, getTodayScreenTimeMs())
     }
 
     private fun handleUserUnlock() {
+        isScreenOff = false
         recordUnlock("user_present")
     }
 
     /**
-     * Records a phone unlock deterministically with stateful debounce.
+     * Records a phone unlock deterministically with timestamp debounce.
      * Prevents duplicate firing across rapid system broadcast events (e.g. ACTION_SCREEN_ON + ACTION_USER_PRESENT).
      */
     @Synchronized
     fun recordUnlock(source: String = "unknown"): Boolean {
         checkAndResetDailyStats()
         val now = System.currentTimeMillis()
-        val isAlreadyUnlocked = prefs.getBoolean(KEY_IS_DEVICE_UNLOCKED, false)
         val lastUnlockTime = prefs.getLong(KEY_LAST_UNLOCK_TIMESTAMP, 0L)
 
-        // Debounce: prevent duplicate counts within the same unlock session or within debounce threshold
-        if (isAlreadyUnlocked || (now - lastUnlockTime < UNLOCK_DEBOUNCE_MS)) {
+        // Debounce: prevent duplicate counts within 1500ms
+        if (now - lastUnlockTime < UNLOCK_DEBOUNCE_MS) {
             return false
         }
 
@@ -186,7 +178,6 @@ class UsageTracker(private val context: Context) {
         val currentUnlocks = prefs.getInt(KEY_UNLOCK_COUNT, 0) + 1
 
         prefs.edit()
-            .putBoolean(KEY_IS_DEVICE_UNLOCKED, true)
             .putLong(KEY_LAST_UNLOCK_TIMESTAMP, now)
             .putInt(KEY_UNLOCK_COUNT, currentUnlocks)
             .apply()
@@ -317,9 +308,8 @@ class UsageTracker(private val context: Context) {
         private const val KEY_SCREEN_ON_TIMESTAMP = "pref_screen_on_timestamp"
         private const val KEY_CONTINUOUS_SESSION_START = "pref_continuous_session_start"
         private const val KEY_LAST_SCREEN_OFF_TIMESTAMP = "pref_last_screen_off_timestamp"
-        private const val KEY_IS_DEVICE_UNLOCKED = "pref_is_device_unlocked"
         private const val KEY_LAST_UNLOCK_TIMESTAMP = "pref_last_unlock_timestamp"
-        private const val UNLOCK_DEBOUNCE_MS = 1200L
+        private const val UNLOCK_DEBOUNCE_MS = 1500L
 
         fun getTodayDateString(timestamp: Long = System.currentTimeMillis()): String {
             val formatter = SimpleDateFormat("yyyyMMdd", Locale.US)

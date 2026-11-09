@@ -16,7 +16,7 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
   bool _hasPermission = false;
   bool _isOverlayRunning = false;
   int _unlockCount = 0;
@@ -193,6 +193,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _refreshState();
     // Periodically update habit counters with live seconds while dashboard is in foreground
     _refreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -203,10 +204,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _refreshTimer?.cancel();
     _animResetTimer?.cancel();
     _ambientSequenceTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshState();
+    }
   }
 
   Future<void> _refreshState() async {
