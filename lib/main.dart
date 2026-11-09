@@ -15,16 +15,16 @@ void main() {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(const ScreenPetApp());
+  runApp(const BubblooApp());
 }
 
-class ScreenPetApp extends StatelessWidget {
-  const ScreenPetApp({super.key});
+class BubblooApp extends StatelessWidget {
+  const BubblooApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ScreenPet',
+      title: 'Bubbloo',
       debugShowCheckedModeBanner: false,
       theme: BotanicalTheme.themeData,
       home: const MainNavigationScreen(),

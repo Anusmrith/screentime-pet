@@ -110,7 +110,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
     override fun onCreate() {
         super.onCreate()
-        setTheme(R.style.Theme_ScreenPet)
+        setTheme(R.style.Theme_Bubbloo)
         isRunning = true
         prefs = getSharedPreferences(PREFS_SETTINGS, Context.MODE_PRIVATE)
         prefs.edit().putBoolean(KEY_SERVICE_ENABLED, true).apply()
@@ -186,9 +186,9 @@ class PetOverlayService : Service(), UsageTracker.Listener {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val title = if (isOverlayVisible) "ScreenPet Active" else "ScreenPet Habit Tracker"
+        val title = if (isOverlayVisible) "Bubbloo Active" else "Bubbloo Habit Tracker"
         val text = if (isOverlayVisible) "Companion floating on camera cutout" else "Tracking screen time & unlocks in background"
-        val actionText = if (isOverlayVisible) "Dismiss Pet" else "Show Pet"
+        val actionText = if (isOverlayVisible) "Dismiss Bubbloo" else "Show Bubbloo"
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_pet)
@@ -284,7 +284,7 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initOverlayView() {
-        val themedContext = android.view.ContextThemeWrapper(this, R.style.Theme_ScreenPet)
+        val themedContext = android.view.ContextThemeWrapper(this, R.style.Theme_Bubbloo)
         val inflater = LayoutInflater.from(themedContext)
         overlayView = inflater.inflate(R.layout.layout_pet_overlay, null)
 

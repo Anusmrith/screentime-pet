@@ -126,7 +126,7 @@ class MainActivity : FlutterActivity() {
                     val unlocks = usageTracker.getTodayUnlockCount()
                     val formatted = UsageTracker.formatDuration(screenTimeMs)
                     val prefs = context.getSharedPreferences(PetOverlayService.PREFS_SETTINGS, Context.MODE_PRIVATE)
-                    val lastRoast = prefs.getString(PetOverlayService.KEY_LAST_ROAST, "ScreenPet on duty! 🐾") ?: "ScreenPet on duty! 🐾"
+                    val lastRoast = prefs.getString(PetOverlayService.KEY_LAST_ROAST, "Bubbloo on duty! 🐾") ?: "Bubbloo on duty! 🐾"
 
                     result.success(
                         mapOf(
@@ -175,7 +175,7 @@ class MainActivity : FlutterActivity() {
 
                 "getLastRoast" -> {
                     val prefs = context.getSharedPreferences(PetOverlayService.PREFS_SETTINGS, Context.MODE_PRIVATE)
-                    val lastRoast = prefs.getString(PetOverlayService.KEY_LAST_ROAST, "ScreenPet on duty! 🐾") ?: "ScreenPet on duty! 🐾"
+                    val lastRoast = prefs.getString(PetOverlayService.KEY_LAST_ROAST, "Bubbloo on duty! 🐾") ?: "Bubbloo on duty! 🐾"
                     result.success(lastRoast)
                 }
 

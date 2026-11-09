@@ -120,7 +120,7 @@ class OverlayBridge {
       'unlockCount': 0,
       'screenTimeMs': 0,
       'screenTimeFormatted': '0m 00s',
-      'lastRoast': 'ScreenPet on duty! 🐾',
+      'lastRoast': 'Bubbloo on duty! 🐾',
     };
   }
 
@@ -171,11 +171,11 @@ class OverlayBridge {
   static Future<String> getLastRoast() async {
     try {
       final String? result = await _channel.invokeMethod<String>('getLastRoast');
-      return result ?? 'ScreenPet on duty! 🐾';
+      return result ?? 'Bubbloo on duty! 🐾';
     } on PlatformException catch (e) {
       // ignore: avoid_print
       print('OverlayBridge error getLastRoast: ${e.message}');
-      return 'ScreenPet on duty! 🐾';
+      return 'Bubbloo on duty! 🐾';
     }
   }
 

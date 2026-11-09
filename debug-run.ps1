@@ -1,4 +1,4 @@
-# ScreenPet Fast Debug & Deploy Script for Flutter + Android
+# Bubbloo Fast Debug & Deploy Script for Flutter + Android
 $ErrorActionPreference = "Stop"
 
 # Ensure we are inside the project directory
@@ -19,7 +19,7 @@ if (Test-Path $javaHome) {
 }
 
 Write-Host "==========================================" -ForegroundColor Cyan
-Write-Host " ScreenPet - Flutter + Native Android Run " -ForegroundColor Cyan
+Write-Host "  Bubbloo - Flutter + Native Android Run  " -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
 # Check connected devices
@@ -57,11 +57,11 @@ Write-Host "[1/2] Building Flutter debug APK..." -ForegroundColor Cyan
 flutter build apk --debug
 
 Write-Host ""
-Write-Host "[2/2] Installing onto phone & launching ScreenPet..." -ForegroundColor Cyan
+Write-Host "[2/2] Installing onto phone & launching Bubbloo..." -ForegroundColor Cyan
 & $adb install -r "build\app\outputs\flutter-apk\app-debug.apk"
 & $adb shell am start -n "com.screenpet.app/.MainActivity"
 
 Write-Host ""
 Write-Host "==========================================" -ForegroundColor Green
-Write-Host " [OK] ScreenPet deployed and launched!    " -ForegroundColor Green
+Write-Host "   [OK] Bubbloo deployed and launched!    " -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green

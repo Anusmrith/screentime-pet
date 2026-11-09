@@ -24,7 +24,7 @@ void main() {
           return {
             'unlockCount': 10,
             'screenTimeFormatted': '1h 15m',
-            'lastRoast': 'ScreenPet on duty! 🐾',
+            'lastRoast': 'Bubbloo on duty! 🐾',
           };
         }
         if (methodCall.method == 'getLanguageMode') {

@@ -6,7 +6,7 @@ import android.content.Intent
 import androidx.core.content.ContextCompat
 
 /**
- * Automatically resumes ScreenPet habit tracking across device reboots.
+ * Automatically resumes Bubbloo habit tracking across device reboots.
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {

@@ -1,4 +1,4 @@
-# ScreenPet 🐱📱
+# Bubbloo 🐱📱
 
 > **Punch-Hole Camera Screen-Time Companion with Attitude**  
 > Built with **Flutter (Material 3 Dark UI)** and **Native Android Kotlin (WindowManager Overlay Service)** communicating via `MethodChannel` (`com.screenpet.app/overlay`).
@@ -7,7 +7,7 @@
 
 ## 🌟 Overview
 
-**ScreenPet** sits directly adjacent to your front camera notch/punch-hole cutout across all apps. It keeps you mindful of your digital habits in real-time with zero battery drain while bringing life and personality to your screen:
+**Bubbloo** sits directly adjacent to your front camera notch/punch-hole cutout across all apps. It keeps you mindful of your digital habits in real-time with zero battery drain while bringing life and personality to your screen:
 
 ```
 +-------------------------------------------------------+
@@ -19,7 +19,8 @@
 ```
 
 * **Live Screentime & Pickups:** Displays active screen time with live ticking seconds and device unlock count (`2h 31m 53s • 18 🔓`).
-* **Sarcastic "Duolingo-Style" Roasts:** The companion roasts you when you unlock too frequently, doomscroll continuously, or check your phone late at night.
+* **Sarcastic "Duolingo-Style" Roasts:** Bubbloo roasts you when you unlock too frequently, doomscroll continuously, or check your phone late at night.
+* **Dual Language Mode:** Toggle between **English** and authentic **Manglish + English** dialogues!
 * **Physics-Based Avatar Animations:** 
   - **Idle Breathing Loop:** Pet hovers up and down gently (2.5dp) by the camera notch.
   - **Squash & Stretch Bounce:** Playful squash on tap with spring overshoot.
@@ -35,9 +36,9 @@
 ## 🏗️ Architecture
 
 ### 1. Flutter Frontend (`lib/`)
-* **Dashboard Screen:** Today's screen-on time, unlock counts, Start/Stop toggle button, latest pet dialogue roast card, and interactive **"Poke Pet"** tester.
+* **Dashboard Screen:** Today's screen-on time, unlock counts, Start/Stop toggle button, latest pet dialogue roast card, English/Manglish switcher, and interactive **"Poke Pet"** tester.
 * **Punch-Hole Calibration Screen:** Real-time sliders for **Horizontal Position (X %)**, **Vertical Offset (Y dp)**, and **Pet Size (dp)** that move the native pet live as you drag, plus hardware **Snap to Cutout**.
-* **Pet Wardrobe:** Companion skins grid (Ginger Tiger active, with unlockable skins).
+* **Pet Wardrobe:** Companion skins grid (Bubbloo active, with upcoming skins).
 * **MethodChannel Bridge (`overlay_bridge.dart`):** Type-safe Dart bridge communicating with native Android services.
 
 ### 2. Native Android Core (`android/`)
@@ -51,7 +52,7 @@
 ## 📁 Clean Project Structure
 
 ```
-ScreenPet/
+Bubbloo/
 ├── android/                             # Native Android Host
 │   └── app/
 │       ├── build.gradle.kts             # MinSdk 28, CompileSdk 35, TargetSdk 35

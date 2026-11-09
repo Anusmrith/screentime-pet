@@ -180,7 +180,7 @@ object RoastEngine {
     // 8. GENERAL GREETINGS
     private val ENGLISH_GENERAL_GREETINGS = listOf(
         "Welcome back! Make it count ⚡",
-        "ScreenPet on duty! 🐾",
+        "Bubbloo on duty! 🐾",
         "What's the mission this time? 🎯",
         "Ready when you are! 🐱",
         "Back in action! 🐾",
@@ -189,7 +189,7 @@ object RoastEngine {
 
     private val MANGLISH_GENERAL_GREETINGS = listOf(
         "Vannallo! Entha karyam? 🎯",
-        "ScreenPet on duty da! 🐾",
+        "Bubbloo on duty da! 🐾",
         "Adipoli, thudangikkoloo ⚡",
         "Hello bro! Make it fast 🐱",
         "Ippo enthaano parupadi? 🔍"

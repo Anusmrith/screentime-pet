@@ -1,8 +1,9 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base Application Theme for ScreenPet overlay elements -->
-    <style name="Theme.ScreenPet" parent="@android:style/Theme.DeviceDefault.NoActionBar">
+    <!-- Base Application Theme for Bubbloo overlay elements -->
+    <style name="Theme.Bubbloo" parent="@android:style/Theme.DeviceDefault.NoActionBar">
         <item name="android:windowBackground">@color/bg_dark</item>
         <item name="android:statusBarColor">@color/bg_dark</item>
         <item name="android:navigationBarColor">@color/bg_dark</item>
     </style>
+    <style name="Theme.ScreenPet" parent="Theme.Bubbloo" />
 </resources>

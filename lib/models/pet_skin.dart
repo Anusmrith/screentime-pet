@@ -22,7 +22,7 @@ class PetSkin {
   static const List<PetSkin> defaultSkins = [
     PetSkin(
       id: 'cat',
-      name: 'Playful Cat',
+      name: 'Bubbloo',
       subtitle: 'Your animated screen-time companion',
       emoji: '🐱',
       rarity: 'Active Companion',

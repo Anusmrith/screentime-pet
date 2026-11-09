@@ -56,7 +56,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
             SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Playful Cat is currently active on your screen!',
+                'Bubbloo is currently active on your screen!',
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,

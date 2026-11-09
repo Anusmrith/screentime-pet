@@ -4,7 +4,7 @@ import 'package:screen_pet/screens/wardrobe_screen.dart';
 import 'package:screen_pet/theme/botanical_theme.dart';
 
 void main() {
-  testWidgets('WardrobeScreen highlights Playful Cat and leaves other skins locked',
+  testWidgets('WardrobeScreen highlights Bubbloo and leaves other skins locked',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1200);
     tester.view.devicePixelRatio = 1.0;
@@ -20,8 +20,8 @@ void main() {
 
     await tester.pump();
 
-    // Verify Playful Cat is present and highlighted
-    expect(find.text('Playful Cat'), findsOneWidget);
+    // Verify Bubbloo is present and highlighted
+    expect(find.text('Bubbloo'), findsOneWidget);
     expect(find.text('ACTIVE'), findsOneWidget);
     expect(find.text('Current Pet'), findsOneWidget);
 
@@ -30,11 +30,11 @@ void main() {
     expect(find.text('Cyber Neo-Cat'), findsOneWidget);
     expect(find.text('Coming Soon'), findsNWidgets(5)); // 5 locked skins
 
-    // Tap on Playful Cat: should show active toast, NOT "coming soon"
-    await tester.tap(find.text('Playful Cat'));
+    // Tap on Bubbloo: should show active toast, NOT "coming soon"
+    await tester.tap(find.text('Bubbloo'));
     await tester.pump();
     expect(
-      find.text('Playful Cat is currently active on your screen!'),
+      find.text('Bubbloo is currently active on your screen!'),
       findsOneWidget,
     );
 

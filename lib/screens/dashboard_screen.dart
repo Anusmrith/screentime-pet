@@ -21,7 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isOverlayRunning = false;
   int _unlockCount = 0;
   String _screenTimeFormatted = '0m 00s';
-  String _lastRoast = 'ScreenPet on duty! 🐾';
+  String _lastRoast = 'Bubbloo on duty! 🐾';
   String _languageMode = 'manglish';
   Timer? _refreshTimer;
   String _activeAnimation = 'idle';
@@ -333,7 +333,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Screen Pet dismissed from punch-hole.'),
+            content: Text('Bubbloo dismissed from punch-hole.'),
             backgroundColor: Color(0xFF161B22),
             behavior: SnackBarBehavior.floating,
             duration: Duration(seconds: 1),
@@ -348,7 +348,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           SnackBar(
             content: Text(
               success
-                  ? 'Screen Pet is now floating beside your punch-hole!'
+                  ? 'Bubbloo is now floating beside your punch-hole!'
                   : 'Could not start overlay. Please check permissions.',
             ),
             backgroundColor: const Color(0xFF161B22),
@@ -408,7 +408,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(width: 10),
                         const Text(
-                          'ScreenPet',
+                          'Bubbloo',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
@@ -497,7 +497,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 6),
                         const Text(
-                          'ScreenPet needs system overlay access to draw the companion flush next to your front camera cutout across all apps.',
+                          'Bubbloo needs system overlay access to draw the companion flush next to your front camera cutout across all apps.',
                           style: TextStyle(
                             fontSize: 12,
                             color: Color(0xFF410002),
@@ -634,7 +634,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'Playful Cat Companion',
+                        'Bubbloo the Cat Companion',
                         style: TextStyle(
                           fontSize: 19,
                           fontWeight: FontWeight.w800,
@@ -670,8 +670,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           label: Text(
                             _isOverlayRunning
-                                ? 'Dismiss Screen Pet'
-                                : 'Spawn Screen Pet',
+                                ? 'Dismiss Bubbloo'
+                                : 'Spawn Bubbloo',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
@@ -1273,7 +1273,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           _buildLegalSection(
             '100% Offline Architecture',
-            'ScreenPet does not request the internet permission in production. Your data never leaves your device and cannot be transmitted over any network.',
+            'Bubbloo does not request the internet permission in production. Your data never leaves your device and cannot be transmitted over any network.',
             Icons.wifi_off_rounded,
           ),
           _buildLegalSection(
@@ -1304,12 +1304,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           _buildLegalSection(
             'Digital Wellbeing Companion',
-            'ScreenPet is provided for motivational, digital habit awareness, and entertainment purposes.',
+            'Bubbloo is provided for motivational, digital habit awareness, and entertainment purposes.',
             Icons.favorite_border_rounded,
           ),
           _buildLegalSection(
             'Non-Medical Disclaimer',
-            'ScreenPet is not a medical device or clinical treatment for device addiction. Statistics should not replace medical or psychological advice.',
+            'Bubbloo is not a medical device or clinical treatment for device addiction. Statistics should not replace medical or psychological advice.',
             Icons.health_and_safety_outlined,
           ),
           _buildLegalSection(
@@ -1319,7 +1319,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           _buildLegalSection(
             'Personal License',
-            'ScreenPet is provided for personal use. Character animations and visual assets are used in accordance with author licensing.',
+            'Bubbloo is provided for personal use. Character animations and visual assets are used in accordance with author licensing.',
             Icons.description_outlined,
           ),
         ],
