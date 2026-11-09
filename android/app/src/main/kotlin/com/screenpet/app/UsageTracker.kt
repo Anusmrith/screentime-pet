@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import java.text.SimpleDateFormat
@@ -34,9 +36,14 @@ class UsageTracker(private val context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var listener: Listener? = null
     private var isReceiverRegistered = false
-    private var isScreenOff = false
+    private var hasUnlockedThisScreenSession = false
+
+    private val delayedCheckRunnable250 = Runnable { recordUnlockIfPresent("screen_on_250ms") }
+    private val delayedCheckRunnable600 = Runnable { recordUnlockIfPresent("screen_on_600ms") }
+    private val delayedCheckRunnable1200 = Runnable { recordUnlockIfPresent("screen_on_1200ms") }
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -81,8 +88,8 @@ class UsageTracker(private val context: Context) {
             checkAndResetDailyStats()
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
             val isInteractive = powerManager?.isInteractive ?: true
-            isScreenOff = !isInteractive
             if (isInteractive) {
+                hasUnlockedThisScreenSession = true
                 val now = System.currentTimeMillis()
                 val currentScreenOn = prefs.getLong(KEY_SCREEN_ON_TIMESTAMP, 0L)
                 if (currentScreenOn == 0L) {
@@ -91,6 +98,8 @@ class UsageTracker(private val context: Context) {
                         .putLong(KEY_CONTINUOUS_SESSION_START, now)
                         .apply()
                 }
+            } else {
+                hasUnlockedThisScreenSession = false
             }
         }
     }
@@ -100,6 +109,7 @@ class UsageTracker(private val context: Context) {
      */
     fun stopTracking() {
         if (isReceiverRegistered) {
+            cancelDelayedChecks()
             // Commit any currently ongoing screen-on session before stopping
             handleScreenOff()
             try {
@@ -110,7 +120,15 @@ class UsageTracker(private val context: Context) {
         }
     }
 
+    private fun cancelDelayedChecks() {
+        mainHandler.removeCallbacks(delayedCheckRunnable250)
+        mainHandler.removeCallbacks(delayedCheckRunnable600)
+        mainHandler.removeCallbacks(delayedCheckRunnable1200)
+    }
+
     private fun handleScreenOn() {
+        cancelDelayedChecks()
+        hasUnlockedThisScreenSession = false
         checkAndResetDailyStats()
         val now = System.currentTimeMillis()
         prefs.edit()
@@ -118,26 +136,22 @@ class UsageTracker(private val context: Context) {
             .putLong(KEY_CONTINUOUS_SESSION_START, now)
             .apply()
 
-        // Check if device is already unlocked when screen turns on
-        // (e.g. no secure lock screen, Smart Lock active, or biometric direct-unlock from screen-off/AOD)
-        val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
-        val isLocked = try {
-            keyguardManager?.isKeyguardLocked ?: false
-        } catch (e: Exception) {
-            false
-        }
+        // 1. Immediate check: If device is already unlocked at screen-on (no lock screen, Smart Lock)
+        recordUnlockIfPresent("screen_on")
 
-        if (!isLocked && isScreenOff) {
-            recordUnlock("screen_on_unlocked")
-        }
-        isScreenOff = false
+        // 2. Staggered checks: For fast biometric / Face Unlock where keyguard dismisses within milliseconds
+        // and OEM firmware omits ACTION_USER_PRESENT
+        mainHandler.postDelayed(delayedCheckRunnable250, 250L)
+        mainHandler.postDelayed(delayedCheckRunnable600, 600L)
+        mainHandler.postDelayed(delayedCheckRunnable1200, 1200L)
 
         listener?.onScreenStateChanged(isScreenOn = true, getTodayScreenTimeMs())
     }
 
     private fun handleScreenOff() {
+        cancelDelayedChecks()
+        hasUnlockedThisScreenSession = false
         checkAndResetDailyStats()
-        isScreenOff = true
         val now = System.currentTimeMillis()
         val screenOnTime = prefs.getLong(KEY_SCREEN_ON_TIMESTAMP, 0L)
         val accumulated = prefs.getLong(KEY_ACCUMULATED_SCREEN_TIME_MS, 0L)
@@ -154,24 +168,53 @@ class UsageTracker(private val context: Context) {
     }
 
     private fun handleUserUnlock() {
-        isScreenOff = false
-        recordUnlock("user_present")
+        cancelDelayedChecks()
+        recordUnlockIfPresent("user_present")
     }
 
     /**
-     * Records a phone unlock deterministically with timestamp debounce.
-     * Prevents duplicate firing across rapid system broadcast events (e.g. ACTION_SCREEN_ON + ACTION_USER_PRESENT).
+     * Evaluates and records an unlock event deterministically.
+     * Guarantees exact 1 unlock per user session without duplicate triggers.
      */
     @Synchronized
-    fun recordUnlock(source: String = "unknown"): Boolean {
-        checkAndResetDailyStats()
+    fun recordUnlockIfPresent(source: String = "unknown"): Boolean {
+        // If already triggered for this screen wake-up, do not duplicate
+        if (hasUnlockedThisScreenSession) {
+            return false
+        }
+
+        // For non-USER_PRESENT sources (screen_on, biometric checks), verify keyguard is truly dismissed
+        if (source != "user_present") {
+            val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+            val isInteractive = powerManager?.isInteractive ?: true
+            if (!isInteractive) {
+                return false
+            }
+
+            val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+            val isLocked = try {
+                keyguardManager?.isKeyguardLocked ?: false
+            } catch (e: Exception) {
+                false
+            }
+            if (isLocked) {
+                // Keyguard is still showing; user has not completed authentication yet
+                return false
+            }
+        }
+
         val now = System.currentTimeMillis()
         val lastUnlockTime = prefs.getLong(KEY_LAST_UNLOCK_TIMESTAMP, 0L)
 
-        // Debounce: prevent duplicate counts within 1500ms
+        // Timestamp debounce to prevent rapid bounces (< 1200ms)
         if (now - lastUnlockTime < UNLOCK_DEBOUNCE_MS) {
+            hasUnlockedThisScreenSession = true
             return false
         }
+
+        hasUnlockedThisScreenSession = true
+        cancelDelayedChecks()
+        checkAndResetDailyStats()
 
         val lastOff = prefs.getLong(KEY_LAST_SCREEN_OFF_TIMESTAMP, 0L)
         val timeSinceOff = if (lastOff > 0L) (now - lastOff).coerceAtLeast(0L) else -1L
@@ -248,6 +291,7 @@ class UsageTracker(private val context: Context) {
         val now = System.currentTimeMillis()
         val todayStr = getTodayDateString(now)
         val isScreenOn = isScreenCurrentlyOn()
+        hasUnlockedThisScreenSession = isScreenOn
         prefs.edit()
             .putString(KEY_DATE, todayStr)
             .putLong(KEY_ACCUMULATED_SCREEN_TIME_MS, 0L)

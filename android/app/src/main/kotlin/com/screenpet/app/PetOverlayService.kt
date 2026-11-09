@@ -852,16 +852,24 @@ class PetOverlayService : Service(), UsageTracker.Listener {
         val now = System.currentTimeMillis()
         val timeSinceInteraction = now - lastInteractiveEventTimeMs
 
-        // If inactive for > 75s, curl up and nap
-        if (timeSinceInteraction > 75000L && !isNapping) {
+        // If inactive for > 120s, take a temporary 14-second catnap, then wake back up automatically
+        if (timeSinceInteraction > 120000L && !isNapping) {
             isNapping = true
-            setPetAnimation(R.raw.cat_sleep, loop = true)
-            scheduleNextAmbientAction(20000L, 35000L)
+            setPetAnimation(R.raw.cat_sleep, loop = true, autoRevertMs = 14000L)
+            mainHandler.postDelayed({
+                if (isOverlayVisible && usageTracker.isScreenCurrentlyOn()) {
+                    isNapping = false
+                    lastInteractiveEventTimeMs = System.currentTimeMillis()
+                    setPetAnimation(R.raw.cat_wave, loop = true, autoRevertMs = 2600L)
+                    showRoast("Yawn... still on duty! 🐾", durationMs = 4000L)
+                    scheduleNextAmbientAction(14000L, 24000L)
+                }
+            }, 14000L)
             return
         }
 
         if (isNapping) {
-            scheduleNextAmbientAction(20000L, 35000L)
+            scheduleNextAmbientAction(10000L, 20000L)
             return
         }
 
@@ -921,6 +929,9 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
     private fun performAmbientLookAround() {
         setPetAnimation(R.raw.cat_look_around, loop = true, autoRevertMs = 2800L)
+        if (activeRoastUntilMs <= System.currentTimeMillis() && random.nextBoolean()) {
+            showRoast(RoastEngine.getAmbientWhisper(), durationMs = 4000L)
+        }
         ivPet.animate()
             .rotation(7f)
             .setDuration(300)
@@ -939,6 +950,9 @@ class PetOverlayService : Service(), UsageTracker.Listener {
 
     private fun performAmbientPlay() {
         setPetAnimation(R.raw.cat_play, loop = true, autoRevertMs = 2500L)
+        if (activeRoastUntilMs <= System.currentTimeMillis() && random.nextBoolean()) {
+            showRoast(RoastEngine.getAmbientWhisper(), durationMs = 4000L)
+        }
         playSquashBounce()
         scheduleNextAmbientAction()
     }
@@ -946,13 +960,16 @@ class PetOverlayService : Service(), UsageTracker.Listener {
     private fun performAmbientWave() {
         setPetAnimation(R.raw.cat_wave, loop = true, autoRevertMs = 2500L)
         if (activeRoastUntilMs <= System.currentTimeMillis()) {
-            showRoast(RoastEngine.getAmbientWhisper(), durationMs = 2500L)
+            showRoast(RoastEngine.getAmbientWhisper(), durationMs = 4500L)
         }
         scheduleNextAmbientAction()
     }
 
     private fun performAmbientHappy() {
         setPetAnimation(R.raw.cat_happy, loop = true, autoRevertMs = 2400L)
+        if (activeRoastUntilMs <= System.currentTimeMillis() && random.nextBoolean()) {
+            showRoast(RoastEngine.getAmbientWhisper(), durationMs = 4000L)
+        }
         val density = resources.displayMetrics.density
         ivPet.animate()
             .translationY(-5f * density)
@@ -1029,13 +1046,12 @@ class PetOverlayService : Service(), UsageTracker.Listener {
                     isWalking = false
                 }
                 val unlockAnimRes = if (unlockCount % 5 == 0) R.raw.cat_celebrate else R.raw.cat_wave
-                setPetAnimation(unlockAnimRes, loop = true, autoRevertMs = 2800L)
+                setPetAnimation(unlockAnimRes, loop = true, autoRevertMs = 3000L)
                 playWakeUpAnimation()
-                showRoast(RoastEngine.getUnlockRoast(unlockCount, timeSinceLastScreenOffMs))
-                updateStatsBadge(force = true)
+                showRoast(RoastEngine.getUnlockRoast(unlockCount, timeSinceLastScreenOffMs), durationMs = 5000L)
                 startSecondTicker()
                 startIdleBreathing()
-                scheduleNextAmbientAction(10000L, 20000L)
+                scheduleNextAmbientAction(14000L, 24000L)
             }
         }
     }
