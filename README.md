@@ -91,3 +91,11 @@ flutter run
 # 2. Or using the automated deploy script
 .\debug-run.ps1
 ```
+
+---
+
+## 📄 License & Restrictions
+
+Copyright © 2026 Bubbloo Authors & Contributors. All rights reserved.
+
+This software is proprietary. Copying, redistributing, modifying, sublicensing, or selling this software, its source code, or binary APKs without prior express written permission is strictly prohibited. See the [LICENSE](LICENSE) file for full legal terms.
